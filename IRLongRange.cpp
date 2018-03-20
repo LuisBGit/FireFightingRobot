@@ -1,6 +1,6 @@
 #include "IRLongRange.h"
 
-
+//Set Up
 void IRLong::setupIR(int AnalogIn) {
     this->pin = AnalogIn;
 }
