@@ -4,7 +4,7 @@
 class locomotion{
   public:
     void setupLocomotion(byte p1, byte p2, byte p3, byte p4);
-    void IK(float vx, float vy, float wz, HardwareSerial *SerialCom);
+    void IK(float vx, float vy, float wz/*, HardwareSerial *SerialCom*/);
     void STOP();
     void disable_motors();
     void enable_motors();

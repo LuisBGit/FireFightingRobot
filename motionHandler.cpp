@@ -11,6 +11,15 @@ void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
   
 }
 
+
+void motionHandler::moveHandler(int x, int y, int z) {
+  motorSystem.IK(x,y,z);
+}
+
+void motionHandler::stopMotor() {
+  motorSystem.STOP();
+}
+
 void motionHandler::serialReceive(HardwareSerial *SerialCom) {
   
   if (SerialCom->available()) {
@@ -22,32 +31,32 @@ void motionHandler::serialReceive(HardwareSerial *SerialCom) {
     switch (val) {
       case 'w'://Move Forward
       case 'W':
-        motorSystem.IK(0,10,0, SerialCom);
+        motorSystem.IK(0,10,0/*, SerialCom*/);
         SerialCom->println("Forward");
         break;
       case 's'://Move Backwards
       case 'S':
-        motorSystem.IK(0,-10,0 , SerialCom);
+        motorSystem.IK(0,-10,0/*, SerialCom*/);
         SerialCom->println("Backwards");
         break;
       case 'q'://Turn Left
       case 'Q':        
-        motorSystem.IK(10,0,0, SerialCom);
+        motorSystem.IK(10,0,0 /*, SerialCom*/);
         SerialCom->println("Strafe Left");
         break;
       case 'e'://Turn Right
       case 'E':
-        motorSystem.IK(-10,0,0, SerialCom);
+        motorSystem.IK(-10,0,0 /*, SerialCom*/);
         SerialCom->println("Strafe Right");
         break;
       case 'a'://Turn Right
       case 'A':
-        motorSystem.IK(0,0,50, SerialCom);
+        motorSystem.IK(0,0,50 /*, SerialCom*/);
         SerialCom->println("ccw");
         break;
       case 'd'://Turn Right
       case 'D':
-        motorSystem.IK(0,0,-50, SerialCom);
+        motorSystem.IK(0,0,-50 /*, SerialCom*/);
         SerialCom->println("cw");
         break;
       case '-'://Turn Right
