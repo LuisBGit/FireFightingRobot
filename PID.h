@@ -9,6 +9,7 @@ class PID {
     float lastError;
     unsigned long prevTime;
     unsigned errorSum;
+    float lastIntError = 0 ;
     
 };
 

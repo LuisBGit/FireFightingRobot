@@ -71,7 +71,7 @@ traversalState currentTraversal;
 
 ISR(TIMER3_OVF_vect) {
 
- if (sonarReading <= 15 && resultR <= 15 && resultL <= 15 && currentTraversal != Cornering) {
+ if (sonarReading <= 15 && resultR <= 23 && resultL <= 23 && currentTraversal != Cornering) {
     currentTraversal = Cornering;
  }
 
@@ -140,23 +140,25 @@ STATE runCycle() {
     resultL = fLeft.readSensor();
     resultRFront = rFront.readSensor();
     resultRBack = rBack.readSensor();
+    SerialCom->println(resultRFront);
+    SerialCom->println(resultRBack);
 
 
   }
 
   if (millis() % 2 == 0) {
-   SerialCom->println(sonar.ping_cm());
+   //SerialCom->println(sonar.ping_cm());
    sonar.ping_cm();
 
   }
 
   switch (currentTraversal) {
      case NormalMove:
-          handler.moveHandler(0, 5, 0);
+          handler.moveHandler(0, 5, 0, (resultRFront - resultRBack), SerialCom);
           break;
      case Cornering:
-          handler.moveHandler(0, 0, 30);
-          if (resultRFront <= 15 && resultRBack <= 15 && resultR >= 15 && resultL >= 15) {
+          handler.moveHandler(0, 0, 50, 0, SerialCom);
+          if (resultRFront <= 32 && resultRBack <= 32 && resultR >= 23 && resultL >= 23) {
             currentTraversal = NormalMove;
           }
           break;
@@ -174,7 +176,7 @@ STATE runCycle() {
   }
   tick++;
 
-  SerialCom->println(millis() - startTest);
+  //SerialCom->println(millis() - startTest);
   return RUNNING;
   
 }
