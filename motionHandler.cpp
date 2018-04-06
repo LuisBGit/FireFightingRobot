@@ -2,7 +2,7 @@
 
 
 void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
-  this->pidX.setGains(200, 0, 0);
+  this->pidX.setGains(250, 0, 0);
   this->pidY.setGains(1, 0, 0);
   this->pidZ.setGains(1, 0, 0);
   this->p1 = p1; this->p2 = p2; this->p3 = p3; this->p4 = p4;

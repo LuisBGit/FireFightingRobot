@@ -5,7 +5,9 @@
 #include "MadgwickAHRS.h"
 #include "IRShortRange.h"
 #include "IRLongRange.h"
+#include "math.h"
 #include <NewPing.h>
+#include <Servo.h>
 
 //****************************************************************PINS*************************************************************
 
@@ -16,6 +18,8 @@ const byte right_front = 51;
 
 int trig = 48;
 int echo = 49;
+
+int servoPin = 4;
 
 //****************************************************************PINS*************************************************************
 
@@ -49,6 +53,9 @@ int tick = 0;
 float gzSum, gySum, gxSum, gzOffset, gyOffset, gxOffset;
 float azSum, aySum, axSum, azOffset, ayOffset, axOffset;
 
+Servo servo;
+
+unsigned int tickCounter = 0;
 
 //***********************************************************Global Variables******************************************************
 
@@ -70,8 +77,14 @@ traversalState currentTraversal;
 //*************************************************************ENUMERATION*********************************************************
 
 ISR(TIMER3_OVF_vect) {
-
- if (sonarReading <= 15 && resultR <= 23 && resultL <= 23 && currentTraversal != Cornering) {
+ tickCounter++;
+ //Detect Corner and Spin
+ if (sonarReading <= 23 && resultR <= 28 && resultL <= 28 && currentTraversal != Cornering) {
+    SerialCom->print(resultR);
+    SerialCom->print(",");
+    SerialCom->print(resultL);
+    SerialCom->print(",");
+    SerialCom->print(sonarReading);
     currentTraversal = Cornering;
  }
 
@@ -81,12 +94,16 @@ ISR(TIMER3_OVF_vect) {
 
 
 
+//************************************************************
+
+
 void setup() {
   SerialCom = &Serial1;  
   SerialCom->begin(115200);
   //SerialCom->println("Starting......");
-  
-  delay(1000);
+  servo.attach(servoPin);
+  servo.write(90);
+  delay(2000);
 }
 
 void loop() {
@@ -122,6 +139,7 @@ STATE initialise() {
   setupPins();
   currentTraversal = NormalMove;
   //sample();
+  sei();
   return RUNNING;
   
 }
@@ -134,29 +152,32 @@ STATE runCycle() {
 
   
   
-  if (millis() % 3 == 0) {
+  if (tickCounter % 63 == 0) {
 
     resultR = fRight.readSensor();
     resultL = fLeft.readSensor();
     resultRFront = rFront.readSensor();
     resultRBack = rBack.readSensor();
-    SerialCom->println(resultRFront);
-    SerialCom->println(resultRBack);
+    //SerialCom->println(resultR);
+    //SerialCom->println(resultL);
 
 
   }
 
-  if (millis() % 2 == 0) {
+  if (tickCounter % 80 == 0) {
    //SerialCom->println(sonar.ping_cm());
-   sonar.ping_cm();
+   sonarReading = sonar.ping_cm();
+   SerialCom->println(sonarReading);
 
   }
 
   switch (currentTraversal) {
      case NormalMove:
+          //SerialCom->println("NormalMove");
           handler.moveHandler(0, 5, 0, (resultRFront - resultRBack), SerialCom);
           break;
      case Cornering:
+          //SerialCom->println("Cornering");
           handler.moveHandler(0, 0, 50, 0, SerialCom);
           if (resultRFront <= 32 && resultRBack <= 32 && resultR >= 23 && resultL >= 23) {
             currentTraversal = NormalMove;
@@ -169,7 +190,7 @@ STATE runCycle() {
   }
   
 
-  if (millis() % 500 == 0) {
+  if (tickCounter % 400 == 0) {
     if (is_battery_voltage_OK() == false) {
       return STOPPED;
     }
@@ -221,7 +242,7 @@ void setupPins() {
   TCCR3A |= (1<<COM3A1);
   TCCR3B |= (1<<CS31)|(1<<CS30);
   TIMSK3 |= (1<<TOIE3);
-  sei();
+
   
 }
 
