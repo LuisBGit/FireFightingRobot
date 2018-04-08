@@ -79,12 +79,16 @@ traversalState currentTraversal;
 ISR(TIMER3_OVF_vect) {
  tickCounter++;
  //Detect Corner and Spin
- if (sonarReading <= 23 && resultR <= 28 && resultL <= 28 && currentTraversal != Cornering) {
+ if (sonarReading <= 23 && resultR <= 25 && resultL <= 25 && currentTraversal != Cornering) {
+  /*
     SerialCom->print(resultR);
     SerialCom->print(",");
     SerialCom->print(resultL);
     SerialCom->print(",");
-    SerialCom->print(sonarReading);
+    SerialCom->print(sonarReading);*/
+
+
+
     currentTraversal = Cornering;
  }
 
@@ -136,6 +140,7 @@ STATE initialise() {
   fLeft.setupIR(5);
   rFront.setupIR(6);
   rBack.setupIR(7);
+  readIR();
   setupPins();
   currentTraversal = NormalMove;
   //sample();
@@ -152,14 +157,14 @@ STATE runCycle() {
 
   
   
-  if (tickCounter % 63 == 0) {
+  if (tickCounter % 31 == 0) {
 
-    resultR = fRight.readSensor();
-    resultL = fLeft.readSensor();
-    resultRFront = rFront.readSensor();
-    resultRBack = rBack.readSensor();
+    readIR();
     //SerialCom->println(resultR);
     //SerialCom->println(resultL);
+        SerialCom->print(resultRFront);
+    SerialCom->print(",");
+    SerialCom->println(resultRBack);
 
 
   }
@@ -167,19 +172,19 @@ STATE runCycle() {
   if (tickCounter % 80 == 0) {
    //SerialCom->println(sonar.ping_cm());
    sonarReading = sonar.ping_cm();
-   SerialCom->println(sonarReading);
+   //SerialCom->println(sonarReading);
 
   }
 
   switch (currentTraversal) {
      case NormalMove:
           //SerialCom->println("NormalMove");
-          handler.moveHandler(0, 5, 0, (resultRFront - resultRBack), SerialCom);
+          handler.moveHandler(0, 4, 0, (resultRFront - resultRBack), SerialCom, 0);
           break;
      case Cornering:
           //SerialCom->println("Cornering");
-          handler.moveHandler(0, 0, 50, 0, SerialCom);
-          if (resultRFront <= 32 && resultRBack <= 32 && resultR >= 23 && resultL >= 23) {
+          handler.moveHandler(0, 0, 50, (resultRFront - resultRBack), SerialCom, 3);
+          if (fabs(resultRFront - resultRBack) <= 2 && resultRFront <= 30 && resultRBack <= 30 && resultR >= 23 && resultL >= 23) {
             currentTraversal = NormalMove;
           }
           break;
@@ -263,6 +268,13 @@ void magnetometerTest() {
   SerialCom->print(mz);
   SerialCom->print(";");
 
+}
+
+void readIR() {
+    resultR = fRight.readSensor();
+    resultL = fLeft.readSensor();
+    resultRFront = rFront.readSensor();
+    resultRBack = rBack.readSensor();
 }
 
 

@@ -2,23 +2,24 @@
 
 
 void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
-  this->pidX.setGains(250, 0, 0);
+  this->pidX.setGains(300, 0.0000000001, 0.125);
   this->pidY.setGains(1, 0, 0);
   this->pidZ.setGains(1, 0, 0);
   this->p1 = p1; this->p2 = p2; this->p3 = p3; this->p4 = p4;
-  this->m1.attach(p1); this->m2.attach(p2); this->m3.attach(p3); this->m4.attach(p4);
+  this->topLeft.attach(p1); this->botLeft.attach(p2); this->botRight.attach(p3); this->topRight.attach(p4);
   
   
 }
 
 
-void motionHandler::moveHandler(int vx, int vy, int wz, float error, HardwareSerial *SerialCom) {
+void motionHandler::moveHandler(int vx, int vy, int wz, float error, HardwareSerial *SerialCom, int motion) {
+  // motion = 0, 1 => forward and backward
+  // motion = 2, 3 => clockWise and anti clock wise
 
-
-  int m1Write;
-  int m2Write;
-  int m3Write;
-  int m4Write;
+  int topLeftWrite;
+  int botLeftWrite;
+  int botRightWrite;
+  int topRightWrite;
   int modifier;
 
   
@@ -28,34 +29,48 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float error, HardwareSer
   theta4 = ((1/rw)* (vx + vy - ((L+l) * wz))) + 1500;
 
 
-  if (error != 0 ) {
+  if (motion == 0) {
     modifier = pidX.applyController(error);
-    m1Write = constrain(this->theta2 + modifier, 1500, 2100);
-    m2Write = constrain(this->theta4 - modifier, 1500, 2100);
-    m3Write = constrain(this->theta3 + modifier, 700, 1500);
-    m4Write = constrain(this->theta1 - modifier, 700, 1500);
+    topLeftWrite = constrain(this->theta2 - -modifier,  1450, 2100);
+    botLeftWrite = constrain(this->theta4 - -modifier, 1450, 2100);
+    botRightWrite = constrain(this->theta3, 700, 1500);
+    topRightWrite = constrain(this->theta1, 700, 1500);
+
+  }else if (motion == 2){
+    if (error  > 0 ) {
+      topLeftWrite = -theta2;
+      botLeftWrite = -theta4;
+      botRightWrite = -theta3;
+      topRightWrite = -theta1;
+    } else {
+      topLeftWrite = theta2;
+      botLeftWrite = theta4;
+      botRightWrite = theta3;
+      topRightWrite = theta1;
+    }
+
 
   } else {
      modifier = 0;
-     m1Write = theta2;
-     m2Write = theta4;
-     m3Write = theta3;
-     m4Write = theta1;
+     topLeftWrite = theta2;
+     botLeftWrite = theta4;
+     botRightWrite = theta3;
+     topRightWrite = theta1;
   }
   //SerialCom->print("Controller Modifier: ");
   //SerialCom->println(modifier);
 
 
 /*
-  this->m1.writeMicroseconds(this->theta2 + modifier);
-  this->m4.writeMicroseconds(this->theta1 - modifier);
-  this->m3.writeMicroseconds(this->theta3 + modifier);
-  this->m2.writeMicroseconds(this->theta4 - modifier);*/
+  this->topLeft.writeMicroseconds(this->theta2 + modifier);
+  this->topRight.writeMicroseconds(this->theta1 - modifier);
+  this->botRight.writeMicroseconds(this->theta3 + modifier);
+  this->botLeft.writeMicroseconds(this->theta4 - modifier);*/
 
-  this->m1.writeMicroseconds(m1Write);
-  this->m4.writeMicroseconds(m4Write);
-  this->m3.writeMicroseconds(m3Write);
-  this->m2.writeMicroseconds(m2Write);
+  this->topLeft.writeMicroseconds(topLeftWrite);
+  this->topRight.writeMicroseconds(topRightWrite);
+  this->botRight.writeMicroseconds(botRightWrite);
+  this->botLeft.writeMicroseconds(botLeftWrite);
 
 
 
@@ -64,10 +79,10 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float error, HardwareSer
 
 
 void motionHandler::stopMotor() {
-  this->m1.writeMicroseconds(1500);
-  this->m2.writeMicroseconds(1500);
-  this->m3.writeMicroseconds(1500);
-  this->m4.writeMicroseconds(1500);
+  this->topLeft.writeMicroseconds(1500);
+  this->botLeft.writeMicroseconds(1500);
+  this->botRight.writeMicroseconds(1500);
+  this->topRight.writeMicroseconds(1500);
 }
 
 
@@ -122,10 +137,10 @@ void motionHandler::serialReceive(HardwareSerial *SerialCom) {
 }
 
 void motionHandler::disableHandler() {
-  this->m1.detach();
-  this->m2.detach();
-  this->m3.detach();
-  this->m4.detach();
+  this->topLeft.detach();
+  this->botLeft.detach();
+  this->botRight.detach();
+  this->topRight.detach();
 
   pinMode(this->p1, INPUT);
   pinMode(this->p2, INPUT);
@@ -134,6 +149,6 @@ void motionHandler::disableHandler() {
 }
 
 void motionHandler::enableHandler() {
-  this->m1.attach(this->p1); this->m2.attach(this->p2); this->m3.attach(this->p3); this->m4.attach(this->p4);
+  this->topLeft.attach(this->p1); this->botLeft.attach(this->p2); this->botRight.attach(this->p3); this->topRight.attach(this->p4);
 }
 
