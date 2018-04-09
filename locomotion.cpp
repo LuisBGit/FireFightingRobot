@@ -13,7 +13,7 @@ void locomotion::STOP() {
   this->m4.writeMicroseconds(1500);
 }
 
-void locomotion::IK(float vx, float vy, float wz, HardwareSerial *SerialCom) {
+void locomotion::IK(float vx, float vy, float wz/*, HardwareSerial *SerialCom*/) {
 
   this->theta1 = ((-1/rw)* (vx + vy +((L+l) *wz)))  + 1500;
   this->theta2 =  ((-1/rw)* (vx - vy + ((L+l) * wz))) + 1500;
@@ -48,6 +48,7 @@ void locomotion::IK(float vx, float vy, float wz, HardwareSerial *SerialCom) {
     this->theta4 = 2300;
   }
 
+/*
   SerialCom->println(" ");
   SerialCom->println(" ");
   SerialCom->println(" ");
@@ -60,7 +61,7 @@ void locomotion::IK(float vx, float vy, float wz, HardwareSerial *SerialCom) {
   SerialCom->print(" Theta3: ");
   SerialCom->print(this->theta3 - 1500);
   SerialCom->print(" Theta4: ");
-  SerialCom->println(this->theta4 - 1500);
+  SerialCom->println(this->theta4 - 1500);*/
 
     this->m1.writeMicroseconds(this->theta2);
     this->m4.writeMicroseconds(this->theta1);
