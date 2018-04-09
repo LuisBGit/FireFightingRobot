@@ -21,6 +21,7 @@ float ultrasonic::readUltrasonic() {
   duration = pulseIn(echo, HIGH);
   ultraArray[arrayPos] = duration;
   meanDuration = (ultraArray[0] + ultraArray[1] + ultraArray[2] + ultraArray[3] + ultraArray[4]) /5;
+
   this->arrayPos++;
   return (this->meanDuration/2) / 29.1;
 }

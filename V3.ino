@@ -8,6 +8,7 @@
 #include "math.h"
 #include <NewPing.h>
 #include <Servo.h>
+#include "orientationSensor.h"
 
 //****************************************************************PINS*************************************************************
 
@@ -57,6 +58,17 @@ Servo servo;
 
 unsigned int tickCounter = 0;
 
+orientationSensor yawSensor;
+float currentHeading = 0;
+float referenceHeading = 0;
+float offSetHeading = 0;
+
+float yawError;
+float upperLimit, lowerLimit;
+
+boolean cornerFlag;
+
+int stateDisplay=  0;
 //***********************************************************Global Variables******************************************************
 
 
@@ -79,18 +91,20 @@ traversalState currentTraversal;
 ISR(TIMER3_OVF_vect) {
  tickCounter++;
  //Detect Corner and Spin
+
+ /*
  if (sonarReading <= 23 && resultR <= 25 && resultL <= 25 && currentTraversal != Cornering) {
-  /*
+  
     SerialCom->print(resultR);
     SerialCom->print(",");
     SerialCom->print(resultL);
     SerialCom->print(",");
-    SerialCom->print(sonarReading);*/
+    SerialCom->print(sonarReading);
 
 
 
-    currentTraversal = Cornering;
- }
+    cornerFlag = true;
+ }*/
 
 
 
@@ -135,13 +149,17 @@ STATE initialise() {
   SerialCom->println("Setting up locomotion");
   handler.setupHandler(left_front, left_rear, right_rear, right_front);
   //SerialCom->println("MPU");
-  fabo.begin();
   fRight.setupIR(4);
   fLeft.setupIR(5);
   rFront.setupIR(6);
   rBack.setupIR(7);
   readIR();
   setupPins();
+  yawSensor.setupOrientation();
+  delay(200);
+  for (int i = 0; i < 11; i++) {
+      referenceHeading = yawSensor.readOrientation();
+  }
   currentTraversal = NormalMove;
   //sample();
   sei();
@@ -155,16 +173,40 @@ STATE runCycle() {
   static unsigned long previous_millis; 
   handler.serialReceive(SerialCom);
 
-  
+/*
+  if (tickCounter % 250) {
+    currentHeading = yawSensor.readOrientation();
+    float headingError = currentHeading - referenceHeading;
+    SerialCom->print("Reference Point: ");
+    SerialCom->print(referenceHeading);
+    SerialCom->print(",");
+    SerialCom->print("currentHeading: ");
+    SerialCom->print(currentHeading);
+    SerialCom->print(",");
+    SerialCom->print("Error: ");
+    SerialCom->println(headingError);
+    
+    
+  }*/
+  if (sonarReading <= 23 && resultR <= 25 && resultL <= 25 && currentTraversal != Cornering) {
+    currentTraversal = Cornering;
+    handler.stopMotor();
+
+    delay(1500);
+    
+    setYawReference();
+    
+  }
+
   
   if (tickCounter % 31 == 0) {
 
     readIR();
     //SerialCom->println(resultR);
     //SerialCom->println(resultL);
-        SerialCom->print(resultRFront);
-    SerialCom->print(",");
-    SerialCom->println(resultRBack);
+    //SerialCom->print(resultRFront);
+    //SerialCom->print(",");
+    //SerialCom->println(resultRBack);
 
 
   }
@@ -175,25 +217,70 @@ STATE runCycle() {
    //SerialCom->println(sonarReading);
 
   }
+  /*
+  if (cornerFlag  == true && currentTraversal != Cornering) {
+    currentTraversal = Cornering;
+    handler.stopMotor();
+
+    delay(2000);
+    
+    setYawReference();
+
+    cornerFlag = false;
+  }*/
 
   switch (currentTraversal) {
      case NormalMove:
           //SerialCom->println("NormalMove");
+          stateDisplay = 0;
           handler.moveHandler(0, 4, 0, (resultRFront - resultRBack), SerialCom, 0);
           break;
      case Cornering:
           //SerialCom->println("Cornering");
-          handler.moveHandler(0, 0, 50, (resultRFront - resultRBack), SerialCom, 3);
-          if (fabs(resultRFront - resultRBack) <= 2 && resultRFront <= 30 && resultRBack <= 30 && resultR >= 23 && resultL >= 23) {
+          stateDisplay = 1;
+          readYaw();
+          //SerialCom->println("HELP");
+
+          //yawError = (referenceHeading - 90)- currentHeading;
+
+                
+   
+          if (referenceHeading < 90 && currentHeading > 180) {
+              yawError = ((currentHeading - 360) - (referenceHeading - 90));
+          } else {
+               yawError = currentHeading - (referenceHeading - 90);
+          }
+/*
+          SerialCom->print("Reference Point: ");
+          SerialCom->print(referenceHeading);
+          SerialCom->print(",");
+          SerialCom->print("currentHeading: ");
+          SerialCom->print(currentHeading);
+          SerialCom->print(",");
+          SerialCom->print("Error: ");
+          SerialCom->println(yawError);*/
+    
+          //SerialCom->println(yawError);
+          handler.moveHandler(0, 0, 20, 0 , SerialCom, 3);
+          /*if (fabs(resultRFront - resultRBack) <= 2 && resultRFront <= 30 && resultRBack <= 30 && resultR >= 23 && resultL >= 23) {
+            currentTraversal = NormalMove;
+          }*/
+          if (yawError <=0 ) {
+            SerialCom->println("finished turn");
+            handler.stopMotor();
             currentTraversal = NormalMove;
           }
+
           break;
      case Dodge:
 
           break;
     
   }
-  
+
+  if (tickCounter % 401 == 0) {
+    SerialCom->println(stateDisplay);
+  }
 
   if (tickCounter % 400 == 0) {
     if (is_battery_voltage_OK() == false) {
@@ -251,24 +338,6 @@ void setupPins() {
   
 }
 
-void magnetometerTest() {
-
-  float roll, pitch, heading;
-  fabo.readAccelXYZ(&ax, &ay, &az);
-  fabo.readGyroXYZ(&gx, &gy, &gz);
-  fabo.readGyroXYZ(&mx, &my, &mz);
-  filter.updateIMU(gx - gxOffset, gy - gyOffset, gz - gzOffset, ax - axOffset, ay - ayOffset, az - azOffset);
-  roll = filter.getRoll();
-  pitch = filter.getPitch();
-  heading = filter.getYaw();
-  SerialCom->print(mx);
-  SerialCom->print(",");
-  SerialCom->print(my);
-  SerialCom->print(",");
-  SerialCom->print(mz);
-  SerialCom->print(";");
-
-}
 
 void readIR() {
     resultR = fRight.readSensor();
@@ -277,4 +346,23 @@ void readIR() {
     resultRBack = rBack.readSensor();
 }
 
+void readYaw() {
+    currentHeading = yawSensor.readOrientation();
+}
+
+void setYawReference() {
+  referenceHeading = yawSensor.readOrientation();
+  if(referenceHeading < 90){
+    lowerLimit = 360 - 90 - referenceHeading; 
+  }
+  else{
+    lowerLimit = referenceHeading - 90;
+  }
+  if(referenceHeading > 270){
+    upperLimit = referenceHeading +90-360; 
+  }
+  else{
+    upperLimit = referenceHeading + 90;
+  }
+}
 
