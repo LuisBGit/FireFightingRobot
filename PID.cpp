@@ -18,9 +18,11 @@ int PID::applyController(float error) {
    this->errorSum += error;
    float pOut = kp*error;
    float dOut = kd*(error - this->lastError) / (deltaTime);
-   float iOut = ki*errorSum*deltaTime;
+   float iOut = ki*errorSum*deltaTime + lastIntError;
+   lastIntError = iOut;
    this->prevTime = currentTime;
    this->lastError = error;
+   
    return pOut + dOut + iOut;
   
 }
