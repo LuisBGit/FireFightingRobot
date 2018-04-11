@@ -1,4 +1,5 @@
 #include "motionHandler.h"
+#include <math.h>
 
 
 void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
@@ -11,23 +12,96 @@ void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
   
 }
 
+void motionHandler::setGains(float p, float i, float d) {
+    this->pidX.setGains(p, i, d);
+}
 
-void motionHandler::moveHandler(int vx, int vy, int wz, float error, HardwareSerial *SerialCom, int motion) {
+
+void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float backReading, int motion) {
   // motion = 0, 1 => forward and backward
   // motion = 2, 3 => clockWise and anti clock wise
-
+  float error = frontReading - backReading;
   int topLeftWrite;
   int botLeftWrite;
   int botRightWrite;
   int topRightWrite;
   int modifier;
 
-  
   theta1 = ((-1/rw)* (vx + vy +((L+l) *wz)))  + 1500;
   theta2 =  ((-1/rw)* (vx - vy + ((L+l) * wz))) + 1500;
   theta3 = ((1/rw)* (vx - vy - ((L+l) * wz))) + 1500;
   theta4 = ((1/rw)* (vx + vy - ((L+l) * wz))) + 1500;
 
+  switch (motion) {
+    case(0):
+      currentState = Correction;
+      break;
+    default:
+      currentState = noCorrection;
+      break;
+  }
+
+  switch (currentState) {
+    case (Correction):
+      switch (currentType) {
+        case (minor):
+            if (frontReading <= 19 || backReading <= 19) {
+              currentType = wall;
+            }
+            else if(fabs(error) >= 3){
+              currentType = rotate; 
+            }
+            else {
+              modifier = pidX.applyController(error);
+              topLeftWrite = constrain(this->theta2 - -modifier,  1450, 2100);
+              botLeftWrite = constrain(this->theta4 - -modifier, 1450, 2100);
+              botRightWrite = constrain(this->theta3, 700, 1500);
+              topRightWrite = constrain(this->theta1, 700, 1500);
+            }
+          break;
+        case (rotate):
+          if (error > 1) {
+              topLeftWrite = 1600;
+              botLeftWrite = 1600;
+              botRightWrite = 1600;
+              topRightWrite = 1600;
+          } else if (error < -1) {
+              topLeftWrite = 1400;
+              botLeftWrite = 1400;
+              botRightWrite = 1400;
+              topRightWrite = 1400;
+          } else {
+            currentType = minor;
+          }
+          break;
+        case(wall):
+          if(frontReading <= 20 && backReading <= 20){
+            topLeftWrite = 1400;
+            botLeftWrite = 1600;
+            botRightWrite = 1600;
+            topRightWrite = 1400;
+          }
+
+          else{
+            currentType = minor;
+          }
+          break;
+      }
+      break;
+    case (noCorrection):
+       topLeftWrite = theta2; 
+       botLeftWrite = theta4;
+       botRightWrite = theta3;
+       topRightWrite = theta1;
+      break;
+    default:
+      break;
+  }
+
+
+
+  
+/*
 
   if (motion == 0) {
     modifier = pidX.applyController(error);
@@ -56,7 +130,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float error, HardwareSer
      botLeftWrite = theta4;
      botRightWrite = theta3;
      topRightWrite = theta1;
-  }
+  }*/
   //SerialCom->print("Controller Modifier: ");
   //SerialCom->println(modifier);
 
@@ -87,54 +161,6 @@ void motionHandler::stopMotor() {
 
 
 
-void motionHandler::serialReceive(HardwareSerial *SerialCom) {
-  
-  if (SerialCom->available()) {
-    char val = SerialCom->read();
-    SerialCom->print("Speed:");
-    SerialCom->print(" ms ");
-
-    /*//Perform an action depending on the command
-    switch (val) {
-      case 'w'://Move Forward
-      case 'W':
-        moveHandler(0,10,0, 0);
-        SerialCom->println("Forward");
-        break;
-      case 's'://Move Backwards
-      case 'S':
-        moveHandler(0,-10,0, 0);
-        SerialCom->println("Backwards");
-        break;
-      case 'q'://Turn Left
-      case 'Q':        
-        moveHandler(10,0,0,0);
-        SerialCom->println("Strafe Left");
-        break;
-      case 'e'://Turn Right
-      case 'E':
-        moveHandler(-10,0,0,0);
-        SerialCom->println("Strafe Right");
-        break;
-      case 'a'://Turn Right
-      case 'A':
-        moveHandler(0,0,50,0);
-        SerialCom->println("ccw");
-        break;
-      case 'd'://Turn Right
-      case 'D':
-        moveHandler(0,0,-50,0);
-        SerialCom->println("cw");
-        break;
-      case '-'://Turn Right
-
-      default:
-        stopMotor();
-        SerialCom->println("stop");
-        break;
-    }*/
-  }
-}
 
 void motionHandler::disableHandler() {
   this->topLeft.detach();
