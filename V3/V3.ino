@@ -250,7 +250,7 @@ STATE runCycle() {
           } else {
                yawError = currentHeading - (referenceHeading - 90);
           }
-/*
+
           SerialCom->print("Reference Point: ");
           SerialCom->print(referenceHeading);
           SerialCom->print(",");
@@ -258,14 +258,14 @@ STATE runCycle() {
           SerialCom->print(currentHeading);
           SerialCom->print(",");
           SerialCom->print("Error: ");
-          SerialCom->println(yawError);*/
+          SerialCom->println(yawError);
     
           //SerialCom->println(yawError);
           handler.moveHandler(0, 0, 20, 0 , SerialCom, 3);
           /*if (fabs(resultRFront - resultRBack) <= 2 && resultRFront <= 30 && resultRBack <= 30 && resultR >= 23 && resultL >= 23) {
             currentTraversal = NormalMove;
           }*/
-          if (yawError <=0 ) {
+          if (yawError <=5 ) {
             SerialCom->println("finished turn");
             handler.stopMotor();
             currentTraversal = NormalMove;
