@@ -12,6 +12,7 @@
 
 
 //Latest Version for Code Demo Week 7
+//Also Testing ATOM Integration
 
 //****************************************************************PINS*************************************************************
 
@@ -124,7 +125,7 @@ void setup() {
 }
 
 void loop() {
-  static STATE machine_state = INITIALISING;
+  static STATE machine_state = INITIALISING;DemoRefac
 
   //FSM
 
