@@ -1,7 +1,7 @@
 
 #include "battery.h"
 #include "motionHandler.h"
-#include <FaBo9Axis_MPU9250.h>
+#include <FaBo9Axis_MPU9250.h> 
 #include "MadgwickAHRS.h"
 #include "IRShortRange.h"
 #include "IRLongRange.h"
@@ -10,12 +10,7 @@
 #include <Servo.h>
 #include "orientationSensorV2.h"
 
-
-//Latest Version for Code Demo Week 7
-
 //****************************************************************PINS*************************************************************
-
-
 
 const byte left_front = 46;
 const byte left_rear = 47;
@@ -46,7 +41,7 @@ Madgwick filter;
 IRShort fRight;
 IRShort fLeft;
 IRLong rFront;
-IRLong rBack;
+IRLong rBack; 
 NewPing sonar(trig, echo, 400);
 
 
@@ -109,13 +104,36 @@ enum traversalState{
 traversalState currentTraversal;
 //*************************************************************ENUMERATION*********************************************************
 
+/*
+ISR(TIMER3_OVF_vect) {
+ tickCounter++;
+ //Detect Corner and Spin
+
+ 
+ if (sonarReading <= 23 && resultR <= 25 && resultL <= 25 && currentTraversal != Cornering) {
+  
+    SerialCom->print(resultR);
+    SerialCom->print(",");
+    SerialCom->print(resultL);
+    SerialCom->print(",");
+    SerialCom->print(sonarReading);
+
+
+
+    cornerFlag = true;
+ }
+
+
+
+}*/
+
 
 
 //************************************************************
 
 
 void setup() {
-  SerialCom = &Serial1;
+  SerialCom = &Serial1;  
   SerialCom->begin(115200);
   //SerialCom->println("Starting......");
   servo.attach(servoPin);
@@ -125,7 +143,7 @@ void setup() {
 
 void loop() {
   static STATE machine_state = INITIALISING;
-
+  
   //FSM
 
   switch (machine_state) {
@@ -138,7 +156,7 @@ void loop() {
      case STOPPED:
           machine_state=stopping();
           break;
-
+    
   };
 }
 
@@ -147,7 +165,7 @@ STATE initialise() {
 
   handler.setupHandler(left_front, left_rear, right_rear, right_front);
 
-
+  
   fRight.setupIR(4);
   fLeft.setupIR(5);
   rFront.setupIR(6);
@@ -161,7 +179,7 @@ STATE initialise() {
   digitalWrite(red, LOW);
   digitalWrite(green, LOW);
   digitalWrite(blue, LOW);
-
+  
   //setupPins();
   yawSensor.setupOrientation();
   yawSensor.recalibrate();
@@ -170,26 +188,28 @@ STATE initialise() {
   //sample();
   sei();
   return RUNNING;
-
+  
 }
 
 
 STATE runCycle() {
   float startTest = millis();
-  static unsigned long previous_millis;
+  static unsigned long previous_millis; 
 
 
   if (sonarReading <= 23 && resultR <= 25 && resultL <= 25 && currentTraversal != Cornering) {
     currentTraversal = Cornering;
     handler.stopMotor();
-
+    
     delay(300);
     angle = yawSensor.readYaw();
     yawSensor.recalibrate();
-
+    
+    //setYawReference();
+    
   }
 
-
+  
   if (millis() - irTiming >= 10) {
     irTiming = millis();
     readIR();
@@ -204,8 +224,11 @@ STATE runCycle() {
   if (millis() - mpuTimer >= 20) {
     unsigned long dt = millis() - mpuTimer;
     mpuTimer = millis();
-    yawSensor.readOrientation(dt);
-
+    //if (currentTraversal == Cornering) {
+      
+      //angle = yawSensor.readOrientation(dt);
+      yawSensor.readOrientation(dt);  
+   // }
   }
 
   switch (currentTraversal) {
@@ -234,7 +257,7 @@ STATE runCycle() {
      case Dodge:
 
           break;
-
+    
   }
 
 
@@ -255,9 +278,9 @@ STATE runCycle() {
     getInput();
   }
 
-
+  //SerialCom->println(millis() - startTest);
   return RUNNING;
-
+  
 }
 
 
@@ -272,14 +295,21 @@ STATE stopping() {
   handler.disableHandler();
 //  slow_flash_LED_builtin();
 
-
+ 
   if (millis() - previous_millis > 500) { //print massage every 500ms
     previous_millis = millis();
+   // SerialCom->println("Lipo voltage too LOW, any lower and the lipo with be damaged");
+    //SerialCom->println("Please Re-charge Lipo");
+
+    //500ms timed if statement to check lipo and output speed settings
     if (is_battery_voltage_OK()) {
+      //SerialCom->print("Lipo OK Counter:");-
+      //SerialCom->println(counter_lipo_voltage_ok);
       counter_lipo_voltage_ok++;
       if (counter_lipo_voltage_ok > 10) { //Making sure lipo voltage is stable
         counter_lipo_voltage_ok = 0;
         handler.enableHandler();
+        //SerialCom->println("Lipo OK returning to RUN STATE");
         return RUNNING;
       }
     } else counter_lipo_voltage_ok = 0;
@@ -287,6 +317,15 @@ STATE stopping() {
   return STOPPED;
 }
 
+/*
+void setupPins() {
+  
+  TCCR3A |= (1<<COM3A1);
+  TCCR3B |= (1<<CS31)|(1<<CS30);
+  TIMSK3 |= (1<<TOIE3);
+
+  
+}*/
 
 
 void readIR() {
@@ -297,6 +336,22 @@ void readIR() {
 }
 
 
+
+void setYawReference() {
+  //referenceHeading = yawSensor.readOrientation();
+  if(referenceHeading < 90){
+    lowerLimit = 360 - 90 - referenceHeading; 
+  }
+  else{
+    lowerLimit = referenceHeading - 90;
+  }
+  if(referenceHeading > 270){
+    upperLimit = referenceHeading +90-360; 
+  }
+  else{
+    upperLimit = referenceHeading + 90;
+  }
+}
 
 
 void displayMessage(String message, float d1, float d2, float d3) {
