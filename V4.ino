@@ -20,8 +20,11 @@ const byte right_front = 51;
 int trig = 48;
 int echo = 49;
 
-int servoPin = 4;
+int servoPin = 3;
 
+int red = 25;
+int green = 24;
+int blue = 23;
 
 //****************************************************************PINS*************************************************************
 
@@ -135,7 +138,7 @@ void setup() {
   //SerialCom->println("Starting......");
   servo.attach(servoPin);
   servo.write(90);
-  delay(2000);
+  delay(1000);
 }
 
 void loop() {
@@ -159,19 +162,28 @@ void loop() {
 
 
 STATE initialise() {
-  //SerialCom->println("START");
-  //SerialCom->println("Setting up locomotion");
+
   handler.setupHandler(left_front, left_rear, right_rear, right_front);
-  //SerialCom->println("MPU");
+
+  
   fRight.setupIR(4);
   fLeft.setupIR(5);
   rFront.setupIR(6);
   rBack.setupIR(7);
   readIR();
+
+  pinMode(red, OUTPUT);
+  pinMode(green, OUTPUT);
+  pinMode(blue, OUTPUT);
+
+  digitalWrite(red, LOW);
+  digitalWrite(green, LOW);
+  digitalWrite(blue, LOW);
+  
   //setupPins();
   yawSensor.setupOrientation();
   yawSensor.recalibrate();
-  delay(200);
+  delay(100);
   currentTraversal = NormalMove;
   //sample();
   sei();
@@ -189,9 +201,10 @@ STATE runCycle() {
     currentTraversal = Cornering;
     handler.stopMotor();
     
-    delay(600);
+    delay(300);
     angle = yawSensor.readYaw();
     yawSensor.recalibrate();
+    
     //setYawReference();
     
   }
@@ -220,28 +233,22 @@ STATE runCycle() {
 
   switch (currentTraversal) {
      case NormalMove:
-          //SerialCom->println("NormalMove");
+          digitalWrite(red, HIGH);
+          digitalWrite(green, LOW);
+          digitalWrite(blue, LOW);
           stateDisplay = 0;
           handler.moveHandler(0, 4, 0, resultRFront,resultRBack, 0);
           break;
      case Cornering:
-          //SerialCom->println("Cornering");
+          digitalWrite(red, LOW);
+          digitalWrite(green, HIGH);
+          digitalWrite(blue, LOW);
           stateDisplay = 1;
-
-                
-          /*
-          if (referenceHeading < 90 && currentHeading > 180) {
-              yawError = ((currentHeading - 360) - (referenceHeading - 90));
-          } else {
-               yawError = currentHeading - (referenceHeading - 90);
-          }*/
-          
-    
 
           handler.moveHandler(0, 0, 20, 0 , 0, 3);
 
-          if (angle+80<yawSensor.readYaw() ) {
-            //SerialCom->println("finished turn");
+          if (80<yawSensor.readYaw() ) {
+
             handler.stopMotor();
             currentTraversal = NormalMove;
           }
