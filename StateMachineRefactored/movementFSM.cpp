@@ -33,3 +33,24 @@ void movementFSM::runCurrentState(float frontRight, float frontLeft, float right
 void movementFSM::normalMove(float rightFront, float rightBack) {
   handler.moveHandler(0, 4, 0,  rightFront, rightBack, 0);
 }
+
+void movementFSM::cornering() {
+  handler.moveHandler(0, 0, 20, 0 , 0, 3);
+}
+
+void movementFSM::dodge() {
+
+}
+
+
+void movementFSM::firefight() {
+
+}
+
+void movementFSM::stop() {
+  handler.stopMotor();
+}
+
+void movementFSM::disableMovement() {
+  handler.disableHandler();
+}
