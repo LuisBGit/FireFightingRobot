@@ -51,7 +51,7 @@ float sensorManager::getFrontLeft() {
   return resultFrontLeft;
 }
 float sensorManager::getRightFront() {
-  return resultFrontRight;
+  return resultRightFront;
 }
 
 float sensorManager::getRightBack() {
