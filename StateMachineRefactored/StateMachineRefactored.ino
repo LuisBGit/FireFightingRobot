@@ -19,7 +19,7 @@ enum state{
 
 //************************************************************
 
-int mod = 0;
+int numberCorners = 0;
 
 void setup() {
   SerialCom = &Serial1;
@@ -168,9 +168,10 @@ void decisionMaking() {
       digitalWrite(red, HIGH);
       digitalWrite(green, LOW);
       digitalWrite(blue, LOW);
-      if (sensors.getUltra() <= (15 + mod)) {
+      if (sensors.getUltra() <= (15 + 15*(numberCorners/4))) {
         movement.stopMovement();
         sensors.recalibrateYaw();
+        numberCorners++;
         delay(20);
 
         movement.changeState((int)Cornering);
@@ -180,9 +181,8 @@ void decisionMaking() {
     digitalWrite(red, LOW);
     digitalWrite(green, HIGH);
     digitalWrite(blue, LOW);
-      if(sensors.getYaw() > 80) {
+      if(sensors.getYaw() > 90) {
         movement.changeState((int)NormalMove);
-        mod = mod + 2;
       }
       break;
     case(Dodge):
