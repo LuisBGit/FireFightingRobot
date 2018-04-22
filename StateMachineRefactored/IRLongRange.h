@@ -1,7 +1,7 @@
 #include "Arduino.h"
 
 
-class IRShort {
+class IRLong {
 
   public:
 
@@ -9,14 +9,15 @@ class IRShort {
     float readSensor();
 
   private:
+    float ranges[];
     float val;
     float pin;
-    float out[14] = {4, 6, 8, 10 ,12, 14,16,18,20,22,24,26,28,30};
-    float in[14] = {466,356,285,233,198,176,156,141,127,113,101,91,78,67}; 
-    float filterStore[5] = {0,0,0,0,0};
     float multiMap(int val, float* _in, float* _out, uint8_t size);
+    float out[12] = {15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70};
+    float in[12] = {298, 227, 179, 145, 119, 101, 85, 73, 65, 53, 43, 34};
+    float filterStore[5] = {0,0,0,0,0};
     int arrayPos;
-    
+
     
 
 
