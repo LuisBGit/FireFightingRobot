@@ -4,11 +4,11 @@
 class movementFSM {
   public:
     void setupMovement();
-    void runCurrentState(float frontRight, float frontLeft, float rightFront, float leftFront);
-    void changeState(int move);
+    void runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yaw);
+    void changeState(int movement);
     void disableMovement();
-
-
+    void stopMovement();
+    int getState();
 
   private:
 
@@ -18,9 +18,9 @@ class movementFSM {
       Dodge = 2,
       Firefight = 3,
       Stop = 4
-    }
+    };
 
-    state currentState = 4;
+    state currentState = state(0);
 
     motionHandler handler;
 
@@ -33,7 +33,7 @@ class movementFSM {
     void cornering();
     void dodge();
     void firefight();
-    void stop();
+
 
 
 };

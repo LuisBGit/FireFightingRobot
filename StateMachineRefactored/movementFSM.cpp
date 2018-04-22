@@ -6,16 +6,16 @@ void movementFSM::setupMovement() {
   handler.setupHandler(left_front, left_rear, right_rear, right_front);
 }
 
-void movementFSM::changeState(int move) {
-  state = move;
+void movementFSM::changeState(int movement) {
+  currentState = (state)movement;
 }
 
-void movementFSM::runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack) {
+void movementFSM::runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yaw) {
   switch (currentState) {
     case(NormalMove):
       normalMove(rightFront, rightBack);
       break;
-    case (cornering):
+    case (Cornering):
       cornering();
       break;
     case (Dodge):
@@ -25,7 +25,7 @@ void movementFSM::runCurrentState(float frontRight, float frontLeft, float right
       firefight();
       break;
     case (Stop):
-      stop();
+      stopMovement();
       break;
   }
 }
@@ -47,10 +47,14 @@ void movementFSM::firefight() {
 
 }
 
-void movementFSM::stop() {
+void movementFSM::stopMovement() {
   handler.stopMotor();
 }
 
 void movementFSM::disableMovement() {
   handler.disableHandler();
+}
+
+int movementFSM::getState() {
+  return int(currentState);
 }

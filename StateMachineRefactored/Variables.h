@@ -1,6 +1,6 @@
 #include "battery.h"
-#include "motionHandler.h"
 #include "Sensors.h"
+#include "movementFSM.h"
 
 
 
@@ -11,10 +11,12 @@
 
 
 //Motor Pins
+/*
 const byte left_front = 46;
 const byte left_rear = 47;
 const byte right_rear = 50;
-const byte right_front = 51;
+const byte right_front = 51;*/
+movementFSM movement;
 
 
 //Servo Pins maybe unneeded when firefighting is integrated
@@ -34,7 +36,7 @@ boolean is_battery_voltage_OK();
 
 //***********************************************************Global Variables******************************************************
 HardwareSerial *SerialCom;
-motionHandler handler;
+//motionHandler handler;
 
 sensorManager sensors;
 
@@ -77,11 +79,4 @@ enum STATE {
   STOPPED
 };
 
-enum traversalState{
-  NormalMove,
-  Dodge,
-  Cornering
-};
-
-traversalState currentTraversal;
 //*************************************************************ENUMERATION*********************************************************

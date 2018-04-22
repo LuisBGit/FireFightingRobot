@@ -21,7 +21,7 @@ void getInput() {
     disp1 = first.toInt();
     disp2 = second.toInt();
     disp3 = third.toInt();
-    handler.setGains(disp1, disp2, disp3);
+    //handler.setGains(disp1, disp2, disp3);
 
     
     changeCounter++;
