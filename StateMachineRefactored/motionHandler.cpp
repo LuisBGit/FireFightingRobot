@@ -17,7 +17,7 @@ void motionHandler::setGains(float p, float i, float d) {
 }
 
 
-void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float backReading, int motion) {
+void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float backReading, int motion, float desiredDistance) {
   // motion = 0, 1 => forward and backward
   // motion = 2, 3 => clockWise and anti clock wise
   float error = frontReading - backReading;
@@ -45,7 +45,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
     case (Correction):
       switch (currentType) {
         case (minor):
-            if (frontReading <= 19 || backReading <= 19) {
+            if (frontReading <= 19 + desiredDistance || backReading <= 19+ desiredDistance) {
               currentType = wall;
             }
             else if(fabs(error) >= 3){
@@ -75,7 +75,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
           }
           break;
         case(wall):
-          if(frontReading <= 20 && backReading <= 20){
+          if(frontReading <= 20+ desiredDistance && backReading <= 20+ desiredDistance){
             topLeftWrite = 1400;
             botLeftWrite = 1600;
             botRightWrite = 1600;

@@ -4,7 +4,7 @@
 class movementFSM {
   public:
     void setupMovement();
-    void runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yaw);
+    void runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yaw, int numberCorners);
     void changeState(int movement);
     void disableMovement();
     void stopMovement();
@@ -29,7 +29,7 @@ class movementFSM {
     const byte right_rear = 50;
     const byte right_front = 51;
 
-    void normalMove(float rightFront, float rightBack);
+    void normalMove(float rightFront, float rightBack, int numberCorners);
     void cornering();
     void dodge();
     void firefight();
