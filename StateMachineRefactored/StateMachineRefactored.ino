@@ -19,6 +19,7 @@ enum state{
 
 //************************************************************
 
+int mod = 0;
 
 void setup() {
   SerialCom = &Serial1;
@@ -89,19 +90,20 @@ STATE runCycle() {
 void systemTiming() {
 
     //IR Timing
-    if (currentTime - irTiming >= 10) {
+    if (currentTime - irTiming >= 15) {
       irTiming = millis();
       sensors.readIRs();
     }
 
     //Ultrasonic Timing
-    if (currentTime  - pingTiming >= 15) {
+    if (currentTime  - pingTiming >= 200) {
      pingTiming = millis();
      sensors.readUltra();
+     SerialCom->println(sensors.getUltra());
     }
 
     //Orientation Reading
-    if (currentTime- mpuTimer >= 20) {
+    if (currentTime- mpuTimer >= 21) {
       unsigned long dt = millis() - mpuTimer;
       mpuTimer = millis();
       sensors.readYaw(dt);
@@ -158,6 +160,7 @@ void LEDSetup() {
   digitalWrite(blue, LOW);
 }
 
+
 void decisionMaking() {
 
   switch(movement.getState()) {
@@ -165,7 +168,7 @@ void decisionMaking() {
       digitalWrite(red, HIGH);
       digitalWrite(green, LOW);
       digitalWrite(blue, LOW);
-      if (sensors.getUltra() <= 23 && sensors.getFrontRight() <= 25 && sensors.getFrontLeft() <= 25) {
+      if (sensors.getUltra() <= (15 + mod)) {
         movement.stopMovement();
         sensors.recalibrateYaw();
         delay(20);
@@ -179,6 +182,7 @@ void decisionMaking() {
     digitalWrite(blue, LOW);
       if(sensors.getYaw() > 80) {
         movement.changeState((int)NormalMove);
+        mod = mod + 2;
       }
       break;
     case(Dodge):
@@ -189,4 +193,9 @@ void decisionMaking() {
       break;
 
   }
+}
+
+
+void sweep() {
+
 }

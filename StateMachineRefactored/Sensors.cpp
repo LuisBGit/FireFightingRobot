@@ -7,7 +7,8 @@ void sensorManager::setupSensors() {
   irRightFront.setupIR(6);
   irRightBack.setupIR(7);
 
-  sonar = new NewPing(ultraTrig, ultraEcho, 400);
+  pinMode(ultraTrig, OUTPUT);
+  pinMode(ultraEcho, INPUT);
 
   //Read IR to remove startup error
   readIRs();
@@ -29,7 +30,7 @@ void sensorManager::readIRs() {
 
 void sensorManager::readUltra() {
   //Read the ultrasonic sensor
-  ultraReading = sonar->ping_cm();
+  ultraReading = ultrasonic();
 }
 
 void sensorManager::readYaw(unsigned long dt) {
@@ -41,6 +42,21 @@ void sensorManager::recalibrateYaw() {
   yawSensor.recalibrate();
 }
 
+float sensorManager::ultrasonic(){
+  float duration, distance;
+  
+
+  
+  digitalWrite(ultraTrig, LOW); //Force to low, just in case
+  delayMicroseconds(2); //hold low
+  digitalWrite(ultraTrig, HIGH); //turn pin on for 10us to send all required pulsess
+  delayMicroseconds(10);
+  digitalWrite(ultraTrig, LOW);
+
+  duration = pulseIn(ultraEcho, HIGH); //Waits for pin to go low from HIGH / pulsewidth
+  return distance = (duration * 0.0343)/2; //Coverts to cm
+
+}
 
 //Get Functions
 float sensorManager::getFrontRight() {

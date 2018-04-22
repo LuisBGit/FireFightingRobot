@@ -25,14 +25,14 @@ class sensorManager {
     float getRightFront();
     float getRightBack();
     float getUltra();
-
+    float ultrasonic();
 
 
   private:
 
     int ultraTrig = 48;
     int ultraEcho = 49;
-
+    const unsigned int MAX_DIST = 23200;
     int irFrRiPin = 4;
     int irFrLePin = 5;
 
@@ -50,7 +50,6 @@ class sensorManager {
     IRLong irRightFront;
     IRLong irRightBack;
 
-    NewPing *sonar;
 
     orientationSensor yawSensor;
 
