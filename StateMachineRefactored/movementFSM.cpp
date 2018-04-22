@@ -39,7 +39,7 @@ void movementFSM::cornering() {
 }
 
 void movementFSM::dodge() {
-
+  handler.stopMotor();
 }
 
 

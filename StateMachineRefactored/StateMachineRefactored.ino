@@ -8,6 +8,10 @@
 
 #include "Variables.h"
 #include "debug.h"
+#include "math.h"
+
+
+float conv = PI/180;
 
 enum state{
   NormalMove = 0,
@@ -99,7 +103,7 @@ void systemTiming() {
     if (currentTime  - pingTiming >= 200) {
      pingTiming = millis();
      sensors.readUltra();
-     SerialCom->println(sensors.getUltra());
+     //SerialCom->println(sensors.getUltra());
     }
 
     //Orientation Reading
@@ -169,12 +173,19 @@ void decisionMaking() {
       digitalWrite(green, LOW);
       digitalWrite(blue, LOW);
       if (sensors.getUltra() <= (15 + 15*(numberCorners/4))) {
+        boolean corner = false;
+
         movement.stopMovement();
+        corner = sweep();
         sensors.recalibrateYaw();
         numberCorners++;
         delay(20);
-
-        movement.changeState((int)Cornering);
+        if (corner == true) {
+          movement.changeState((int)Cornering);
+          servo.write(90);
+        } else {
+          movement.changeState((int)Dodge);
+        }
       }
       break;
     case(Cornering):
@@ -186,6 +197,9 @@ void decisionMaking() {
       }
       break;
     case(Dodge):
+        digitalWrite(red, LOW);
+       digitalWrite(green, LOW);
+       digitalWrite(blue, HIGH);
       break;
     case(Firefight):
       break;
@@ -196,6 +210,39 @@ void decisionMaking() {
 }
 
 
-void sweep() {
+boolean sweep() {
+  float ref = sensors.getUltra();
+  float lowest = ref;
+  float highest = ref;
+
+  for (int i = 45; i <= 135; i+=5) {
+    servo.write(i);
+    sensors.readUltra();
+    float point;
+    if (i != 90) {
+      point = sensors.getUltra() * cos((i - 90) * conv);
+    } else {
+      point = sensors.getUltra();
+    }
+
+    if (point > highest) {
+      highest = point;
+    } else if (point < lowest) {
+      lowest = point;
+    }
+
+    delay(200);
+    
+  }
+  SerialCom->print(ref - lowest);
+  SerialCom->print(",");
+  SerialCom->println(highest - ref);
+  if (((ref - lowest) > 15) || ((highest - ref) > 15)) {
+    SerialCom->println("Obstacle");
+    return false;
+  } else {
+    SerialCom->println("Wall");
+    return true;
+  }
 
 }
