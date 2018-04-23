@@ -85,14 +85,18 @@ STATE runCycle() {
   if (batterySafetyTrigger == true) {
     return STOPPED;
   }
-
+  if(numberCorners == 13){
+    return STOPPED;
+  }
   return RUNNING;
 
 }
 
 
 void systemTiming() {
-
+    //semsor reading
+    SerialCom->println( sensors.getRightFront());
+    SerialCom->println( sensors.getRightBack());
     //IR Timing
     if (currentTime - irTiming >= 15) {
       irTiming = millis();
@@ -100,7 +104,7 @@ void systemTiming() {
     }
 
     //Ultrasonic Timing
-    if (currentTime  - pingTiming >= 200) {
+    if (currentTime  - pingTiming >= 180) {
      pingTiming = millis();
      sensors.readUltra();
      //SerialCom->println(sensors.getUltra());
@@ -172,20 +176,21 @@ void decisionMaking() {
       digitalWrite(red, HIGH);
       digitalWrite(green, LOW);
       digitalWrite(blue, LOW);
-      if (sensors.getUltra() <= (15 + 15*(numberCorners/4))) {
+      if (sensors.getUltra() <= (15+15*(numberCorners/4))) {
         boolean corner = false;
 
         movement.stopMovement();
-        corner = sweep();
-        sensors.recalibrateYaw();
+        //corner = sweep();
+
         numberCorners++;
+        sensors.recalibrateYaw();
         delay(20);
-        if (corner == true) {
+        //if (corner == true) {
           movement.changeState((int)Cornering);
-          servo.write(90);
-        } else {
-          movement.changeState((int)Dodge);
-        }
+         // servo.write(90);
+        //} else {
+          //movement.changeState((int)Dodge);
+       // }
       }
       break;
     case(Cornering):

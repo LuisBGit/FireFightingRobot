@@ -32,12 +32,12 @@ float orientationSensor::readYaw() {
 
 void orientationSensor::recalibrate() {
   float zSum = 0;
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 50; i++) {
       fabo.readGyroXYZ(&gx, &gy, &gz);
       zSum += gz;
-      delay(20);
+      delay(30);
   }
-  zBias = zSum / 200.0;
+  zBias = zSum / 50;
   integralSum = 0;
   out = 0;
 }

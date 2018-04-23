@@ -31,7 +31,7 @@ void movementFSM::runCurrentState(float frontRight, float frontLeft, float right
 }
 
 void movementFSM::normalMove(float rightFront, float rightBack, int numberCorners) {
-  handler.moveHandler(0, 4, 0,  rightFront, rightBack, 0, ((numberCorners-1)/4)*15);
+  handler.moveHandler(0, 5, 0,  rightFront, rightBack, 0, ((numberCorners-1)/4)*13);
 }
 
 void movementFSM::cornering() {

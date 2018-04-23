@@ -3,7 +3,7 @@
 
 
 void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
-  this->pidX.setGains(300, 0.0000000001, 0.125);
+  this->pidX.setGains(200, 0, 0);
   this->pidY.setGains(1, 0, 0);
   this->pidZ.setGains(1, 0, 0);
   this->p1 = p1; this->p2 = p2; this->p3 = p3; this->p4 = p4;
@@ -45,10 +45,10 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
     case (Correction):
       switch (currentType) {
         case (minor):
-            if (frontReading <= 19 + desiredDistance || backReading <= 19+ desiredDistance) {
+            if (frontReading <= (13 + desiredDistance) || backReading <= (13+ desiredDistance) || (frontReading == 999) || (backReading == 999)) {
               currentType = wall;
             }
-            else if(fabs(error) >= 3){
+            else if(fabs(error) >= 2){
               currentType = rotate; 
             }
             else {
@@ -75,7 +75,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
           }
           break;
         case(wall):
-          if(frontReading <= 20+ desiredDistance && backReading <= 20+ desiredDistance){
+          if((frontReading == 999 || backReading == 999) || (frontReading <= 15+ desiredDistance && backReading <= 15+ desiredDistance)){
             topLeftWrite = 1400;
             botLeftWrite = 1600;
             botRightWrite = 1600;

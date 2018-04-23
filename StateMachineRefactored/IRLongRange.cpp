@@ -23,7 +23,7 @@ float IRLong::multiMap(int val, float* _in, float* _out, uint8_t size)
 {
   // take care the value is within range
   // val = constrain(val, _in[0], _in[size-1]);
-  if (val >= _in[0]) return _out[0];
+  if (val > _in[0]) return 999;
   if (val <= _in[size-1]) return _out[size-1];
 
   // search right interval
