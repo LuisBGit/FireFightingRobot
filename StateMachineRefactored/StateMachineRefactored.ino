@@ -95,8 +95,8 @@ STATE runCycle() {
 
 void systemTiming() {
     //semsor reading
-    SerialCom->println( sensors.getRightFront());
-    SerialCom->println( sensors.getRightBack());
+    //SerialCom->println( sensors.getRightFront());
+    //SerialCom->println( sensors.getRightBack());
     //IR Timing
     if (currentTime - irTiming >= 15) {
       irTiming = millis();
@@ -176,7 +176,7 @@ void decisionMaking() {
       digitalWrite(red, HIGH);
       digitalWrite(green, LOW);
       digitalWrite(blue, LOW);
-      if (sensors.getUltra() <= (15+15*(numberCorners/4))) {
+      if (sensors.getUltra() <= (13+15*(numberCorners/4))) {
         boolean corner = false;
 
         movement.stopMovement();

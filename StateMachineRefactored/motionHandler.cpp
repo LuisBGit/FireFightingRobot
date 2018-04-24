@@ -3,7 +3,7 @@
 
 
 void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
-  this->pidX.setGains(200, 0, 0);
+  this->pidX.setGains(150, 0, 0);
   this->pidY.setGains(1, 0, 0);
   this->pidZ.setGains(1, 0, 0);
   this->p1 = p1; this->p2 = p2; this->p3 = p3; this->p4 = p4;
@@ -45,10 +45,11 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
     case (Correction):
       switch (currentType) {
         case (minor):
-            if (frontReading <= (13 + desiredDistance) || backReading <= (13+ desiredDistance) || (frontReading == 999) || (backReading == 999)) {
+            //Serial1.println("minor");
+            if (frontReading <= (12 + desiredDistance) || backReading <= (12+ desiredDistance) || (frontReading == 999) || (backReading == 999)) {
               currentType = wall;
             }
-            else if(fabs(error) >= 2){
+            else if(fabs(error) >= 3){
               currentType = rotate; 
             }
             else {
@@ -60,6 +61,10 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
             }
           break;
         case (rotate):
+          //Serial1.println("rotate");
+          Serial1.print(frontReading);
+          Serial1.print(", ");
+          Serial1.println(backReading);
           if (error > 1) {
               topLeftWrite = 1600;
               botLeftWrite = 1600;
@@ -75,6 +80,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
           }
           break;
         case(wall):
+          //Serial1.println("wall");
           if((frontReading == 999 || backReading == 999) || (frontReading <= 15+ desiredDistance && backReading <= 15+ desiredDistance)){
             topLeftWrite = 1400;
             botLeftWrite = 1600;
