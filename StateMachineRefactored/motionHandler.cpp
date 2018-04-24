@@ -49,7 +49,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
             if (frontReading <= (12 + desiredDistance) || backReading <= (12+ desiredDistance) || (frontReading == 999) || (backReading == 999)) {
               currentType = wall;
             }
-            else if(fabs(error) >= 3){
+            else if(fabs(error) >= 3 && desiredDistance<15){
               currentType = rotate; 
             }
             else {

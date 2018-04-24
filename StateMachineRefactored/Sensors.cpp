@@ -11,8 +11,11 @@ void sensorManager::setupSensors() {
   pinMode(ultraEcho, INPUT);
 
   //Read IR to remove startup error
-  readIRs();
-
+  for (int i =0; i <5; i++) {
+    readIRs();
+    readUltra();
+    delay(200);
+  }
   //Setup orientationSensor
   yawSensor.setupOrientation();
   yawSensor.recalibrate();
@@ -43,8 +46,12 @@ void sensorManager::recalibrateYaw() {
 }
 
 float sensorManager::ultrasonic(){
-  float duration, distance;
+  if(count == 4){
+    count = 0;
+  }
   
+  float duration, mean, distance;
+
 
   
   digitalWrite(ultraTrig, LOW); //Force to low, just in case
@@ -54,7 +61,10 @@ float sensorManager::ultrasonic(){
   digitalWrite(ultraTrig, LOW);
 
   duration = pulseIn(ultraEcho, HIGH); //Waits for pin to go low from HIGH / pulsewidth
-  return distance = (duration * 0.0343)/2; //Coverts to cm
+  filterArray[count] = duration;
+  mean = (filterArray[0] + filterArray[1] + filterArray[2] + filterArray[3] + filterArray[4])/5;
+  count++;
+  return distance = (mean * 0.0343)/2; //Coverts to cm
 
 }
 
