@@ -97,18 +97,22 @@ void systemTiming() {
     //semsor reading
     //SerialCom->println( sensors.getRightFront());
     //SerialCom->println( sensors.getRightBack());
+
+
+    //Ultrasonic Timing
+    if (currentTime  - pingTiming >= 150) {
+     pingTiming = millis();
+     sensors.readUltra();
+     //SerialCom->println(sensors.getUltra());
+    }
+    
     //IR Timing
     if (currentTime - irTiming >= 15) {
       irTiming = millis();
       sensors.readIRs();
     }
 
-    //Ultrasonic Timing
-    if (currentTime  - pingTiming >= 180) {
-     pingTiming = millis();
-     sensors.readUltra();
-     //SerialCom->println(sensors.getUltra());
-    }
+
 
     //Orientation Reading
     if (currentTime- mpuTimer >= 21) {
@@ -118,10 +122,10 @@ void systemTiming() {
 
     }
     //PID Tuner
-    if (currentTime - sendTime >= 25) {
+   /* if (currentTime - sendTime >= 25) {
       sendTime = millis();
       getInput();
-    }
+    }*/
 }
 
 
@@ -176,7 +180,10 @@ void decisionMaking() {
       digitalWrite(red, HIGH);
       digitalWrite(green, LOW);
       digitalWrite(blue, LOW);
-      if (sensors.getUltra() <= (14+15*(numberCorners/4))) {
+      if (sensors.getUltra() <= (15+13*(numberCorners/4))) {
+            digitalWrite(red, HIGH);
+    digitalWrite(green, LOW);
+    digitalWrite(blue, HIGH);
         boolean corner = false;
 
         movement.stopMovement();

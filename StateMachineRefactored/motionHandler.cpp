@@ -81,7 +81,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
           break;
         case(wall):
           //Serial1.println("wall");
-          if((frontReading == 999 || backReading == 999) || (frontReading <= 15+ desiredDistance && backReading <= 15+ desiredDistance)){
+          if((frontReading == 999 || backReading == 999) || (frontReading <= 14+ desiredDistance && backReading <= 14+ desiredDistance)){
             topLeftWrite = 1400;
             botLeftWrite = 1600;
             botRightWrite = 1600;
