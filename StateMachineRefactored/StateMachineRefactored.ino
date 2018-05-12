@@ -219,6 +219,7 @@ void decisionMaking() {
             prevR = sensors.getFrontRight();
             dodgeFSM = SIDEWAYS;
             yDistance.restartDistance(sensors.getRightBack());
+            movement.changeState((int)NormalMove);
             break;
 
          case (SIDEWAYS):
