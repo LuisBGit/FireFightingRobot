@@ -19,7 +19,7 @@ void movementFSM::runCurrentState(float frontRight, float frontLeft, float right
       cornering();
       break;
     case (Dodge):
-      dodge();
+      dodge(frontRight, frontLeft);
       break;
     case (Firefight):
       firefight();
@@ -31,17 +31,40 @@ void movementFSM::runCurrentState(float frontRight, float frontLeft, float right
 }
 
 void movementFSM::normalMove(float rightFront, float rightBack, int numberCorners) {
-  handler.moveHandler(0, 5, 0,  rightFront, rightBack, 0, ((numberCorners-1)/4)*13);
+  handler.moveHandler(0, 5 , 0,  rightFront, rightBack, 0, ((numberCorners-1)/4)*13);
 }
 
 void movementFSM::cornering() {
   handler.moveHandler(0, 0, 20, 0 , 0, 3,0);
 }
 
-void movementFSM::dodge() {
-  handler.stopMotor();
+void movementFSM::dodge(float frontRight, float frontLeft) {
+  switch (mod) {
+    case (0):
+      handler.moveHandler(-5, 0, 0, 0 , 0, 3,0);//-5
+      break;
+    case (1):
+      handler.moveHandler(5, 0, 0, 0 , 0, 3,0);//5
+      break;
+    case (2):
+      handler.moveHandler(0, 3, 0, 0 , 0, 3,0);//3 second one
+      break;
+    case (3):
+      handler.stopMotor();
+      break;
+
+  }
+
+
 }
 
+void movementFSM::changeDodgeMode(int mode) {
+  mod = mode;
+}
+
+int movementFSM::getDodgeMode() {
+  return mod;
+}
 
 void movementFSM::firefight() {
 

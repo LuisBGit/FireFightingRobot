@@ -9,18 +9,15 @@
 #include "Variables.h"
 #include "debug.h"
 #include "math.h"
+#include "FireFighting.h" //Including FireFighting.h
+#define pin A12
 
+FireFighting fireFightingSystem;
 
 float conv = PI/180;
-
-enum state{
-  NormalMove = 0,
-  Cornering = 1,
-  Dodge = 2,
-  Firefight = 3,
-  Stop = 4
-};
-
+float dodgeRef = 0;
+distanceCalcV2 xDistance;
+distanceCalcV2 yDistance;
 //************************************************************
 
 int numberCorners = 0;
@@ -55,6 +52,8 @@ void loop() {
 
 STATE initialise() {
 
+  fireFightingSystem.firefightingSetup(pin, 45, 3, servo); //Initialising the fireFightingSystem
+  
   movement.setupMovement();
 
   sensors.setupSensors();
@@ -64,9 +63,9 @@ STATE initialise() {
   LEDSetup();
 
   delay(100);
-
+  xDistance.restartDistance(sensors.getUltra());
+  yDistance.restartDistance(sensors.getRightFront());
   return RUNNING;
-
 }
 
 
@@ -94,22 +93,18 @@ STATE runCycle() {
 
 
 void systemTiming() {
-    //semsor reading
-    //SerialCom->println( sensors.getRightFront());
-    //SerialCom->println( sensors.getRightBack());
-
-
-    //Ultrasonic Timing
-    if (currentTime  - pingTiming >= 150) {
+    if (currentTime  - pingTiming >= 100) {
      pingTiming = millis();
      sensors.readUltra();
-     //SerialCom->println(sensors.getUltra());
+     SerialCom->println(sensors.getUltra());
+     //SerialCom->println(xDistance.getDistance(sensors.getUltra()));
     }
-    
+
     //IR Timing
-    if (currentTime - irTiming >= 15) {
+    if (currentTime - irTiming >= 10) {
       irTiming = millis();
       sensors.readIRs();
+     
     }
 
 
@@ -121,11 +116,6 @@ void systemTiming() {
       sensors.readYaw(dt);
 
     }
-    //PID Tuner
-   /* if (currentTime - sendTime >= 25) {
-      sendTime = millis();
-      getInput();
-    }*/
 }
 
 
@@ -177,43 +167,126 @@ void decisionMaking() {
 
   switch(movement.getState()) {
     case(NormalMove):
-      digitalWrite(red, HIGH);
-      digitalWrite(green, LOW);
-      digitalWrite(blue, LOW);
+      //digitalWrite(red, HIGH);
+      //digitalWrite(green, LOW);
+      //digitalWrite(blue, LOW);
       if (sensors.getUltra() <= (15+13*(numberCorners/4))) {
-            digitalWrite(red, HIGH);
-    digitalWrite(green, LOW);
-    digitalWrite(blue, HIGH);
+            //digitalWrite(red, HIGH);
+            //digitalWrite(green, LOW);
+            //digitalWrite(blue, HIGH);
         boolean corner = false;
 
         movement.stopMovement();
-        //corner = sweep();
+        corner = sweep();
 
         numberCorners++;
         sensors.recalibrateYaw();
         delay(20);
-        //if (corner == true) {
+        if (corner == true) {
           movement.changeState((int)Cornering);
-         // servo.write(90);
-        //} else {
-          //movement.changeState((int)Dodge);
-       // }
+          servo.write(90);
+        } else {
+          distanceToMove = ((sensors.getRightFront() + sensors.getRightBack())/ 2) + 12;
+          movement.changeState((int)Firefight);
+        }
       }
       break;
     case(Cornering):
-    digitalWrite(red, LOW);
-    digitalWrite(green, HIGH);
-    digitalWrite(blue, LOW);
+      //digitalWrite(red, LOW);
+      //digitalWrite(green, HIGH);
+      //digitalWrite(blue, LOW);
       if(sensors.getYaw() > 90) {
         movement.changeState((int)NormalMove);
       }
       break;
     case(Dodge):
-        digitalWrite(red, LOW);
-       digitalWrite(green, LOW);
-       digitalWrite(blue, HIGH);
+       //digitalWrite(red, LOW);
+       //digitalWrite(green, LOW);
+       //digitalWrite(blue, HIGH);
+       switch (dodgeFSM) {
+         case (START):
+            /*if (sensors.getRightBack() < 20 || sensors.getRightFront() < 20) {
+              SerialCom->println("Change Direction");
+              dodgeDirection = (int)LEFT;
+              movement.changeDodgeMode(1);
+            } else {
+              dodgeDirection =(int)RIGHT;
+              movement.changeDodgeMode(0);
+            }*/
+            dodgeDirection =(int)LEFT;
+            movement.changeDodgeMode(1);
+            prevL = sensors.getFrontLeft();
+            prevR = sensors.getFrontRight();
+            dodgeFSM = SIDEWAYS;
+            yDistance.restartDistance(sensors.getRightBack());
+            break;
+
+         case (SIDEWAYS):
+            /*if (dodgeDirection == (int)RIGHT) {
+              if (sensors.getFrontLeft() - prevL > 10) {
+                movement.changeDodgeMode(2);
+                dodgeFSM = FORWARD;
+              }
+            } else {
+               if (sensors.getFrontRight() - prevR > 10) {
+                movement.changeDodgeMode(2);
+                dodgeFSM = FORWARD;
+              }
+            }*/
+
+            if (sensors.getFrontRight() - prevR > 10) {
+              movement.changeDodgeMode(2);
+              dodgeFSM = FORWARD;
+              prevB = sensors.getRightBack();
+              //SerialCom->println("Done Sideways");
+              xDistance.restartDistance(sensors.getUltra());
+              dodgeRef = yDistance.getDistance(sensors.getRightBack());
+              
+            }
+            break;
+         case (FORWARD):
+         if(fabs(xDistance.getDistance(sensors.getUltra()))>30)
+         {
+           dodgeFSM = RETURN;
+           movement.changeDodgeMode(0);
+           //SerialCom->println("Done Forward");
+           //SerialCom->println(sensors.getRightBack());
+           //SerialCom->println(prevB);
+           yDistance.restartDistance(sensors.getRightBack());
+         }
+         //SerialCom->println(xDistance.getDistance(sensors.getUltra()));
+            /*if (sensors.getRightBack() - prevB > 0) {
+
+              if (dodgeDirection == 0) {
+                movement.changeDodgeMode(1);
+              } else {
+                movement.changeDodgeMode(0);
+              }
+              dodgeFSM = RETURN;
+            }*/
+
+
+            break;
+         case (RETURN):
+           if(fabs(yDistance.getDistance(sensors.getRightBack()))>dodgeRef-1){
+               movement.changeState((int)Stop);
+               yDistance.restartDistance(sensors.getRightBack());
+               
+           }
+
+
+            break;
+       }
+      prevR = sensors.getFrontRight();
+      prevL = sensors.getFrontLeft();
+      prevB = sensors.getRightBack();
       break;
     case(Firefight):
+      digitalWrite(red, LOW);
+      digitalWrite(green, LOW);
+      digitalWrite(blue, HIGH);
+      fireFightingSystem.fireFight(); //main fireFight function
+      movement.changeState((int)Dodge);
       break;
     case(Stop):
       break;
@@ -244,7 +317,7 @@ boolean sweep() {
     }
 
     delay(200);
-    
+
   }
   SerialCom->print(ref - lowest);
   SerialCom->print(",");
@@ -256,5 +329,5 @@ boolean sweep() {
     SerialCom->println("Wall");
     return true;
   }
-
+  servo.write(90);
 }
