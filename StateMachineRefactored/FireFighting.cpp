@@ -51,7 +51,7 @@ bool FireFighting::fireScan(){
       Serial.println(viableCount);
     }
       
-    if((fireStarted == true) && (reading < 700) && (fireDetected == false) && (viableCount >= 10) && (i < 135)) 
+    if((fireStarted == true) && (reading < 700) && (fireDetected == false) && (viableCount >= 20) && (i < 135)) 
     {
       fireEnd = i;
       fireDetected = true;    
