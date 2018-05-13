@@ -22,11 +22,7 @@ int PID::applyController(float error) {
    lastIntError = iOut;
    this->prevTime = currentTime;
    this->lastError = error;
-   
+
    return pOut + dOut + iOut;
-  
+
 }
-
-
-
-

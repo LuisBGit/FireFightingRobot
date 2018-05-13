@@ -1,9 +1,10 @@
+
 #include "motionHandler.h"
 #include <math.h>
 
 
 void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
-  this->pidX.setGains(300, 0.0000000001, 0.125);
+  this->pidX.setGains(150, 0, 0);
   this->pidY.setGains(1, 0, 0);
   this->pidZ.setGains(1, 0, 0);
   this->p1 = p1; this->p2 = p2; this->p3 = p3; this->p4 = p4;
@@ -17,7 +18,7 @@ void motionHandler::setGains(float p, float i, float d) {
 }
 
 
-void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float backReading, int motion, float desiredDistance) {
+void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float backReading, int motion, float desiredDistance, float yawReading) {
   // motion = 0, 1 => forward and backward
   // motion = 2, 3 => clockWise and anti clock wise
   float error = frontReading - backReading;
@@ -27,11 +28,17 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
   int topRightWrite;
   int modifier;
 
+  /*if(motion !=0){
+    wz = ((150-yawReading) * wz/100);
+  }*/
+  
   theta1 = ((-1/rw)* (vx + vy +((L+l) *wz)))  + 1500;
   theta2 =  ((-1/rw)* (vx - vy + ((L+l) * wz))) + 1500;
   theta3 = ((1/rw)* (vx - vy - ((L+l) * wz))) + 1500;
   theta4 = ((1/rw)* (vx + vy - ((L+l) * wz))) + 1500;
-
+  if(fabs(error) >6){
+    error = 0;
+  }
   switch (motion) {
     case(0):
       currentState = Correction;
@@ -45,10 +52,11 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
     case (Correction):
       switch (currentType) {
         case (minor):
-            if (frontReading <= 19 + desiredDistance || backReading <= 19+ desiredDistance) {
+            //Serial1.println("minor");
+            if (frontReading <= (12 + desiredDistance) || backReading <= (12+ desiredDistance) || (frontReading == 999) || (backReading == 999)) {
               currentType = wall;
             }
-            else if(fabs(error) >= 3){
+            else if(fabs(error) >= 3 && desiredDistance<15){
               currentType = rotate; 
             }
             else {
@@ -60,6 +68,10 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
             }
           break;
         case (rotate):
+          //Serial1.println("rotate");
+          Serial1.print(frontReading);
+          Serial1.print(", ");
+          Serial1.println(backReading);
           if (error > 1) {
               topLeftWrite = 1600;
               botLeftWrite = 1600;
@@ -75,7 +87,8 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
           }
           break;
         case(wall):
-          if(frontReading <= 20+ desiredDistance && backReading <= 20+ desiredDistance){
+          //Serial1.println("wall");
+          if((frontReading == 999 || backReading == 999) || (frontReading <= 14+ desiredDistance && backReading <= 14+ desiredDistance)){
             topLeftWrite = 1400;
             botLeftWrite = 1600;
             botRightWrite = 1600;
@@ -89,6 +102,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
       }
       break;
     case (noCorrection):
+    
        topLeftWrite = theta2; 
        botLeftWrite = theta4;
        botRightWrite = theta3;

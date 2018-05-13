@@ -7,7 +7,7 @@
 class motionHandler {
   public:
     void setupHandler(byte p1, byte p2, byte p3, byte p4);
-    void moveHandler(int vx, int vy, int wz, float frontReading,float backReading , int motion, float desiredDistance);
+    void moveHandler(int vx, int vy, int wz, float frontReading,float backReading , int motion, float desiredDistance, float yawReading);
     void stopMotor();
     void disableHandler();
     void setGains(float p, float i, float d);

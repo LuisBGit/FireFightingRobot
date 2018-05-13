@@ -26,10 +26,12 @@ class sensorManager {
     float getRightBack();
     float getUltra();
     float ultrasonic();
+    float getGyro();
 
 
   private:
-
+    int count = 0; 
+    float filterArray[5] = {0,0,0,0,0};
     int ultraTrig = 48;
     int ultraEcho = 49;
     const unsigned int MAX_DIST = 23200;
