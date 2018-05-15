@@ -11,7 +11,7 @@ void PID::setGains(float kp, float ki, float kd) {
   this->errorSum = 0;
 }
 
-int PID::applyController(float error) {
+float PID::applyController(float error) {
 
    unsigned long currentTime = millis();
    unsigned long deltaTime = currentTime - this->prevTime;
@@ -22,11 +22,7 @@ int PID::applyController(float error) {
    lastIntError = iOut;
    this->prevTime = currentTime;
    this->lastError = error;
-   
+
    return pOut + dOut + iOut;
-  
+
 }
-
-
-
-
