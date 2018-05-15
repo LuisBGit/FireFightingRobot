@@ -95,11 +95,11 @@ void systemTiming() {
     if (currentTime  - pingTiming >= 150) {
      pingTiming = millis();
      sensors.readUltra();
-     /*SerialCom->print(xDistanceSpiral.getDistance(sensors.getUltra()));
+     SerialCom->print(xDistanceSpiral.getDistance(sensors.getUltra()));
      SerialCom->print(", ");
      SerialCom->print(xDistanceSpiral.getReference() - 15);
      SerialCom->print(", ");
-     SerialCom->println(sensors.getUltra());*/
+     SerialCom->println(sensors.getUltra());
      //SerialCom->println(sensors.getUltra());
      //SerialCom->println(xDistance.getDistance(sensors.getUltra()));
     }
@@ -108,7 +108,6 @@ void systemTiming() {
     if (currentTime - irTiming >= 10) {
       irTiming = millis();
       sensors.readIRs();
-
 
     }
 
@@ -175,37 +174,35 @@ void decisionMaking() {
     digitalWrite(green, LOW);
     digitalWrite(blue, LOW);
     case(NormalMove):
-
-          if (ObstacleDetection() == true) {
+          if (ObstacleDetection() == true && !finishedLength()) {
               distanceToMove = ((sensors.getRightFront() + sensors.getRightBack())/ 2) + 12;
               movement.changeState((int)Dodge);
-          } else if (within(fabs(xDistanceSpiral.getDistance(sensors.getUltra())), (/*xDistanceSpiral.getReference()*/ 150 - (15+13*(numberCorners/4))), 5)) {
+        
+          }else if(finishedLength()) {
             digitalWrite(red, HIGH);
             digitalWrite(green, LOW);
             digitalWrite(blue, HIGH);
-            boolean obstacle = true;
+            boolean corner = true;
             movement.stopMovement();
             numberCorners++;
             sensors.recalibrateYaw();
             delay(20);
             movement.changeState((int)Cornering);
-           /* if (obstacle == false) {
-              movement.changeState((int)Cornering);
-              servo.write(90);
-            } else {
-              distanceToMove = ((sensors.getRightFront() + sensors.getRightBack())/ 2) + 12;
-              movement.changeState((int)Dodge);
-            }*/
           }
-          break;
+
+      break;
     case(Cornering):
       digitalWrite(red, LOW);
       digitalWrite(green, HIGH);
       digitalWrite(blue, LOW);
+      //SerialCom->print(sensors.getYaw());
+      //SerialCom->print("' ");
+      //SerialCom->println(sensors.getGyro());
       if(sensors.getYaw() > 90) {
           movement.changeState(4);
           delay(100);
           movement.changeState((int)NormalMove);
+          //numberCorners++;
           xDistanceSpiral.restartDistance(sensors.getUltra());
           if(numberCorners >4){
             //normalMoveState = 1;
@@ -219,24 +216,43 @@ void decisionMaking() {
        digitalWrite(blue, HIGH);
        switch (dodgeFSM) {
          case (START):
+            /*if (sensors.getRightBack() < 20 || sensors.getRightFront() < 20) {
+              SerialCom->println("Change Direction");
+              dodgeDirection = (int)LEFT;
+              movement.changeDodgeMode(1);
+            } else {
+              dodgeDirection =(int)RIGHT;
+              movement.changeDodgeMode(0);
+            }*/
             dodgeDirection =(int)LEFT;
             movement.changeDodgeMode(1);
             prevL = sensors.getFrontLeft();
             prevR = sensors.getFrontRight();
             dodgeFSM = SIDEWAYS;
             yDistance.restartDistance(sensors.getRightBack());
-            
             break;
 
          case (SIDEWAYS):
+            /*if (dodgeDirection == (int)RIGHT) {
+              if (sensors.getFrontLeft() - prevL > 10) {
+                movement.changeDodgeMode(2);
+                dodgeFSM = FORWARD;
+              }
+            } else {
+               if (sensors.getFrontRight() - prevR > 10) {
+                movement.changeDodgeMode(2);
+                dodgeFSM = FORWARD;
+              }
+            }*/
+
             if (sensors.getFrontRight() - prevR > 10) {
               movement.changeDodgeMode(2);
               dodgeFSM = FORWARD;
               prevB = sensors.getRightBack();
               //SerialCom->println("Done Sideways");
-              sensors.readUltra();
               xDistance.restartDistance(sensors.getUltra());
               dodgeRef = yDistance.getDistance(sensors.getRightBack());
+
             }
             break;
          case (FORWARD):
@@ -244,14 +260,28 @@ void decisionMaking() {
          {
            dodgeFSM = RETURN;
            movement.changeDodgeMode(0);
+           //SerialCom->println("Done Forward");
+           //SerialCom->println(sensors.getRightBack());
+           //SerialCom->println(prevB);
            yDistance.restartDistance(sensors.getRightBack());
          }
+         //SerialCom->println(xDistance.getDistance(sensors.getUltra()));
+            /*if (sensors.getRightBack() - prevB > 0) {
+
+              if (dodgeDirection == 0) {
+                movement.changeDodgeMode(1);
+              } else {
+                movement.changeDodgeMode(0);
+              }
+              dodgeFSM = RETURN;
+            }*/
+
+
             break;
          case (RETURN):
            if(fabs(yDistance.getDistance(sensors.getRightBack()))>dodgeRef-1){
                movement.changeState((int)NormalMove);
                yDistance.restartDistance(sensors.getRightBack());
-               //xDistanceSpiral.setReferenceDistance(sensors.getUltra());
 
            }
 
@@ -270,7 +300,6 @@ void decisionMaking() {
   }
 }
 
-
 boolean within(float value, float compare, float percent) {
   if (value >= (compare - (percent * compare/100)) && value <= (compare + (percent * compare/100))) {
     return true;
@@ -278,23 +307,36 @@ boolean within(float value, float compare, float percent) {
     return false;
   }
 }
-
 boolean ObstacleDetection() {
-  boolean ultra = within(sensors.getUltra(), 15, 5);
-  boolean left = within(sensors.getFrontLeft(), 12, 5) /*&& within(sensors.getFrontLeft(), sensors.getUltra(), 5)*/;
-  boolean right = within(sensors.getFrontRight(), 12, 5) /*&& within(sensors.getFrontRight(), sensors.getUltra(), 5)*/;
-      SerialCom->print(ultra);
+  boolean ultra = sensors.getUltra() <= 15;
+  boolean left = sensors.getFrontLeft() <= 12; /*&& within(sensors.getFrontLeft(), sensors.getUltra(), 5)*/;
+  boolean right = sensors.getFrontRight() <= 12; /*&& within(sensors.getFrontRight(), sensors.getUltra(), 5)*/;
+    SerialCom->print(sensors.getUltra());
+      SerialCom->print(", ");
+          SerialCom->print(sensors.getFrontLeft());
+      SerialCom->print(", ");
+          SerialCom->print(sensors.getFrontRight());
+      SerialCom->print(", ");
+  SerialCom->print(ultra);
       SerialCom->print(", ");
       SerialCom->print(left);
       SerialCom->print(", ");
       SerialCom->println(right);
   if ((ultra || left || right)&&((!ultra) || (!left) || (!right))) {
-    //Wall
+    //OBSTACLE
+    SerialCom->println("OBSTACLE");
     return true;
   } else {
-    //
+    SerialCom->println("WALL");
     return false;
   }
 }
 
+boolean finishedLength() {
+  if(within(fabs(xDistanceSpiral.getDistance(sensors.getUltra())), (120 - (15+13*(numberCorners/4))), 5)) {
+    return true;
+  } else {
+    return false;
+  }
+}
 

@@ -66,7 +66,7 @@ float sensorManager::ultrasonic(){
   filterArray[count] = duration;
   filt = (filterArray[0] + filterArray[1] + filterArray[2] + filterArray[3] + filterArray[4])/5;
   count++;
-  distance = (filt * 0.0220) - 1.47; //Coverts to cm
+  distance = (filt * 0.0221) - 1.39; //Coverts to cm
   return distance;
 }
 
