@@ -2,7 +2,7 @@
 
 void sensorManager::setupSensors() {
   //Setup all the sensors
-  irFrontRight.setupIR(4);
+  irFrontRight.setupIR(3);
   irFrontLeft.setupIR(5);
   irRightFront.setupIR(6);
   irRightBack.setupIR(7);

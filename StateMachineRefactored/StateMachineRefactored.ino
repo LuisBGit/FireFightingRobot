@@ -95,17 +95,18 @@ void systemTiming() {
     if (currentTime  - pingTiming >= 150) {
      pingTiming = millis();
      sensors.readUltra();
+     /*
      SerialCom->print(xDistanceSpiral.getDistance(sensors.getUltra()));
      SerialCom->print(", ");
      SerialCom->print(xDistanceSpiral.getReference() - 15);
      SerialCom->print(", ");
-     SerialCom->println(sensors.getUltra());
+     SerialCom->println(sensors.getUltra()); */
      //SerialCom->println(sensors.getUltra());
      //SerialCom->println(xDistance.getDistance(sensors.getUltra()));
     }
 
     //IR Timing
-    if (currentTime - irTiming >= 10) {
+    if (currentTime - irTiming >= 5) {
       irTiming = millis();
       sensors.readIRs();
 
@@ -308,26 +309,55 @@ boolean within(float value, float compare, float percent) {
   }
 }
 boolean ObstacleDetection() {
-  boolean ultra = sensors.getUltra() <= 15;
-  boolean left = sensors.getFrontLeft() <= 12; /*&& within(sensors.getFrontLeft(), sensors.getUltra(), 5)*/;
-  boolean right = sensors.getFrontRight() <= 12; /*&& within(sensors.getFrontRight(), sensors.getUltra(), 5)*/;
-    SerialCom->print(sensors.getUltra());
-      SerialCom->print(", ");
-          SerialCom->print(sensors.getFrontLeft());
-      SerialCom->print(", ");
-          SerialCom->print(sensors.getFrontRight());
-      SerialCom->print(", ");
-  SerialCom->print(ultra);
-      SerialCom->print(", ");
-      SerialCom->print(left);
-      SerialCom->print(", ");
-      SerialCom->println(right);
-  if ((ultra || left || right)&&((!ultra) || (!left) || (!right))) {
-    //OBSTACLE
-    SerialCom->println("OBSTACLE");
+  digitalWrite(red, LOW);
+  digitalWrite(green, LOW);
+  digitalWrite(blue, LOW); 
+  //Obtain sensor readings from the ultrasonic, left and right IRs
+  float ultra = sensors.getUltra();
+  float left = sensors.getFrontLeft(); 
+  float right = sensors.getFrontRight(); 
+
+  SerialCom->print(sensors.getFrontLeft());
+  SerialCom->print(", ");
+  SerialCom->print(sensors.getUltra());
+  SerialCom->print(", ");
+  SerialCom->println(sensors.getFrontRight());
+    
+  //Object Detection Scenarios
+  //Obstacle-left scenarios - if the leftmost IR sensor obtains a reading that is either:
+  //(a) Both less than the ultrasonic (which is front-facing) and the right IR 
+  //(b) Close to the ultrasonic but very different to the right IR
+  //Then an object is around the left region
+  boolean obstacleFarLeft = (left < ultra) && (left < right); //the object will ONLY touch the left IR
+  boolean obstacleMidLeft = (left < right) && (ultra < right); //the object is interfering with the left IR and centre ultrasonic, a threshold is introduced for the ultrasonic
+  //Obstacle-right scenarios - if the rightmost IR sensor obtains a reading that is either:
+  //(a) Both less than the ultrasonic (which is front-facing) and the left IR 
+  //(b) Close to the ultrasonic but very different to the left IR
+  //Then an object is around the right region  
+  boolean obstacleFarRight = (right < ultra) && (right < left); //the object will ONLY touch the left IR
+  boolean obstacleMidRight = (right < left) && (ultra < left); //the object is interfering with the left IR and centre ultrasonic, a threshold is introduced for the ultrasonic
+  //Wall Detection Scenarios - Uses a tolerance to check whether the readings indicate a wall or not
+  boolean wallDetectedLeftCheck = ((left > 0.9*ultra) && (left < 1.1*ultra)) && ((left > 0.9*right) && (left < 1.1*right));
+  boolean wallDetectedRightCheck = ((right > 0.9*ultra) && (right < 1.1*ultra)) && ((right > 0.9*left) && (right < 1.1*left));
+  boolean wallDetectedUltraCheck = ((ultra > 0.9*left) && (ultra < 1.1*left)) && ((ultra > 0.9*right) && (ultra < 1.1*right));
+  if (obstacleFarRight || obstacleMidRight || obstacleFarLeft || obstacleMidLeft){
+    //Right Region
+    // BLUE
+    digitalWrite(red, LOW);
+    digitalWrite(green, LOW);
+    digitalWrite(blue, HIGH);  
     return true;
+  } else if (wallDetectedLeftCheck && wallDetectedRightCheck && wallDetectedUltraCheck){
+    //RED & BLUE
+    digitalWrite(red, LOW);
+    digitalWrite(green, LOW);
+    digitalWrite(blue, HIGH);  
+    return false;
   } else {
-    SerialCom->println("WALL");
+    //Something else completely
+    digitalWrite(red, HIGH);
+    digitalWrite(green, LOW);
+    digitalWrite(blue, HIGH); 
     return false;
   }
 }
