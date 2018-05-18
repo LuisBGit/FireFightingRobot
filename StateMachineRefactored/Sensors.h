@@ -26,6 +26,7 @@ class sensorManager {
     float getRightBack();
     float getUltra();
     float ultrasonic();
+    float getGyro();
 
 
   private:
