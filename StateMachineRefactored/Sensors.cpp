@@ -2,8 +2,8 @@
 
 void sensorManager::setupSensors() {
   //Setup all the sensors
-  irFrontRight.setupIR(4);
-  irFrontLeft.setupIR(5);
+  irFrontRight.setupIR(3);
+  irFrontLeft.setupIR(4);
   irRightFront.setupIR(6);
   irRightBack.setupIR(7);
 
@@ -50,7 +50,9 @@ float sensorManager::ultrasonic(){
     count = 0;
   }
   
-  float duration, mean, distance;
+  float duration;
+  float filt;
+  float distance;
 
 
   
@@ -62,10 +64,10 @@ float sensorManager::ultrasonic(){
 
   duration = pulseIn(ultraEcho, HIGH); //Waits for pin to go low from HIGH / pulsewidth
   filterArray[count] = duration;
-  mean = (filterArray[0] + filterArray[1] + filterArray[2] + filterArray[3] + filterArray[4])/5;
+  filt = (filterArray[0] + filterArray[1] + filterArray[2] + filterArray[3] + filterArray[4])/5;
   count++;
-  return distance = (mean * 0.0343)/2; //Coverts to cm
-
+  distance = (filt * 0.0221) - 1.39; //Coverts to cm
+  return distance;
 }
 
 //Get Functions
@@ -90,4 +92,9 @@ float sensorManager::getUltra() {
 
 float sensorManager::getYaw() {
   return yawSensor.readYaw();
+}
+
+
+float sensorManager::getGyro() {
+  return yawSensor.getGyro();
 }

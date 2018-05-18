@@ -1,3 +1,4 @@
+
 #include "motionHandler.h"
 #include <math.h>
 
@@ -5,11 +6,11 @@
 void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
   this->pidX.setGains(150, 0, 0);
   this->pidY.setGains(1, 0, 0);
-  this->pidZ.setGains(1, 0, 0);
+  this->pidZ.setGains(1.2, 0, 0);
   this->p1 = p1; this->p2 = p2; this->p3 = p3; this->p4 = p4;
   this->topLeft.attach(p1); this->botLeft.attach(p2); this->botRight.attach(p3); this->topRight.attach(p4);
-  
-  
+
+
 }
 
 void motionHandler::setGains(float p, float i, float d) {
@@ -17,7 +18,7 @@ void motionHandler::setGains(float p, float i, float d) {
 }
 
 
-void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float backReading, int motion, float desiredDistance) {
+void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float backReading, int motion, float desiredDistance, float yawReading) {
   // motion = 0, 1 => forward and backward
   // motion = 2, 3 => clockWise and anti clock wise
   float error = frontReading - backReading;
@@ -26,12 +27,18 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
   int botRightWrite;
   int topRightWrite;
   int modifier;
+/*
+  if(motion !=0){
+    wz = ((150-yawReading) * wz/100);
+  }*/
 
   theta1 = ((-1/rw)* (vx + vy +((L+l) *wz)))  + 1500;
   theta2 =  ((-1/rw)* (vx - vy + ((L+l) * wz))) + 1500;
   theta3 = ((1/rw)* (vx - vy - ((L+l) * wz))) + 1500;
   theta4 = ((1/rw)* (vx + vy - ((L+l) * wz))) + 1500;
-
+  if(fabs(error) >6){
+    error = 0;
+  }
   switch (motion) {
     case(0):
       currentState = Correction;
@@ -50,7 +57,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
               currentType = wall;
             }
             else if(fabs(error) >= 3 && desiredDistance<15){
-              currentType = rotate; 
+              currentType = rotate;
             }
             else {
               modifier = pidX.applyController(error);
@@ -82,10 +89,11 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
         case(wall):
           //Serial1.println("wall");
           if((frontReading == 999 || backReading == 999) || (frontReading <= 14+ desiredDistance && backReading <= 14+ desiredDistance)){
-            topLeftWrite = 1400;
-            botLeftWrite = 1600;
-            botRightWrite = 1600;
-            topRightWrite = 1400;
+            topLeftWrite = 1350;
+            botLeftWrite = 1700;
+            topRightWrite = 1350;
+            botRightWrite = 1700;
+
           }
 
           else{
@@ -95,7 +103,8 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
       }
       break;
     case (noCorrection):
-       topLeftWrite = theta2; 
+
+       topLeftWrite = theta2;
        botLeftWrite = theta4;
        botRightWrite = theta3;
        topRightWrite = theta1;
@@ -105,47 +114,6 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
   }
 
 
-
-  
-/*
-
-  if (motion == 0) {
-    modifier = pidX.applyController(error);
-    topLeftWrite = constrain(this->theta2 - -modifier,  1450, 2100);
-    botLeftWrite = constrain(this->theta4 - -modifier, 1450, 2100);
-    botRightWrite = constrain(this->theta3, 700, 1500);
-    topRightWrite = constrain(this->theta1, 700, 1500);
-
-  }else if (motion == 2){
-    if (error  > 0 ) {
-      topLeftWrite = -theta2;
-      botLeftWrite = -theta4;
-      botRightWrite = -theta3;
-      topRightWrite = -theta1;
-    } else {
-      topLeftWrite = theta2;
-      botLeftWrite = theta4;
-      botRightWrite = theta3;
-      topRightWrite = theta1;
-    }
-
-
-  } else {
-     modifier = 0;
-     topLeftWrite = theta2;
-     botLeftWrite = theta4;
-     botRightWrite = theta3;
-     topRightWrite = theta1;
-  }*/
-  //SerialCom->print("Controller Modifier: ");
-  //SerialCom->println(modifier);
-
-
-/*
-  this->topLeft.writeMicroseconds(this->theta2 + modifier);
-  this->topRight.writeMicroseconds(this->theta1 - modifier);
-  this->botRight.writeMicroseconds(this->theta3 + modifier);
-  this->botLeft.writeMicroseconds(this->theta4 - modifier);*/
 
   this->topLeft.writeMicroseconds(topLeftWrite);
   this->topRight.writeMicroseconds(topRightWrite);
@@ -183,4 +151,3 @@ void motionHandler::disableHandler() {
 void motionHandler::enableHandler() {
   this->topLeft.attach(this->p1); this->botLeft.attach(this->p2); this->botRight.attach(this->p3); this->topRight.attach(this->p4);
 }
-

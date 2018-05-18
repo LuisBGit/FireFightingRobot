@@ -1,7 +1,7 @@
 #include "battery.h"
 #include "Sensors.h"
 #include "movementFSM.h"
-
+#include "distanceCalcV2.h"
 
 
 //Variables used in the main arduino loop
@@ -11,11 +11,6 @@
 
 
 //Motor Pins
-/*
-const byte left_front = 46;
-const byte left_rear = 47;
-const byte right_rear = 50;
-const byte right_front = 51;*/
 movementFSM movement;
 
 
@@ -43,9 +38,11 @@ sensorManager sensors;
 
 Servo servo;
 
-
-
-
+float prevL = 9999;
+float prevR = 9999;
+float prevB = 9999;
+float distanceToMove = 0;
+int dodgeDirection = 0; //0 equals left
 
 int stateDisplay=  0;
 
@@ -69,6 +66,10 @@ long batteryTiming = 0;
 long mpuTimer = 0;
 unsigned long sendTime = 0;
 
+
+unsigned long decisionTiming = 0;
+unsigned long motorTiming = 0;
+
 //***********************************************************Global Variables******************************************************
 
 
@@ -78,5 +79,27 @@ enum STATE {
   RUNNING,
   STOPPED
 };
+
+enum dodgeSequence {
+  START,
+  SIDEWAYS,
+  FORWARD,
+  RETURN
+};
+
+enum state{
+  NormalMove = 0,
+  Cornering = 1,
+  Dodge = 2,
+  Firefight = 3,
+  Stop = 4
+};
+
+enum dodgeDirection {
+  RIGHT,
+  LEFT
+};
+
+dodgeSequence dodgeFSM = START;
 
 //*************************************************************ENUMERATION*********************************************************
