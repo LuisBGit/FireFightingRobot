@@ -177,6 +177,7 @@ void decisionMaking() {
       }
       break;
     case(Dodge):
+       Serial1.println("Dodging Entered");
        switch (dodgeFSM) {
          case (START):
             dodgeDirection =(int)LEFT;
@@ -195,9 +196,9 @@ void decisionMaking() {
             break;
 
          case (SIDEWAYS):
-            SerialCom->println("Sideways");
+           // SerialCom->println("Sideways");
             if (sensors.getFrontRight() - prevR > 10 || sidePass ==1) {
-              SerialCom->println("check thing");
+              //SerialCom->println("check thing");
               sidePass = 1;
               dodgeBuffer++;
               movement.changeDodgeMode(3);
@@ -216,7 +217,7 @@ void decisionMaking() {
             }
             break;
          case (FORWARD):
-         SerialCom->println("Forward");
+         //SerialCom->println("Forward");
          if(fabs(xDistance.getDistance(sensors.getUltra()))>33.5|| sidePass ==1)
          {
            movement.changeDodgeMode(3);
@@ -266,14 +267,12 @@ void decisionMaking() {
       prevB = sensors.getRightBack();
       break;
     case(Firefight):
-    Serial1.println("Entering FF");
-      fireFightingSystem.fireFight(); //main fireFight function
-      Serial1.println("Entering Dodging");
+      fireFightingSystem.fireFight();
+      dodgeFSM = START;
       movement.changeState((int)Dodge);
       break;
     case(Stop):
       break;
-
   }
     movement.runCurrentState(sensors.getFrontRight(), sensors.getFrontLeft(), sensors.getRightFront(), sensors.getRightBack(), sensors.getYaw(), (numberCorners% 2 ==0) ? numberCorners : 0);
 }

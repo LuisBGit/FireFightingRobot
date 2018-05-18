@@ -13,31 +13,33 @@ void FireFighting::firefightingSetup (int pPin, int fPin, int sPin, Servo &attac
   
   pinMode(fanPin, OUTPUT);
   pinMode(pin, INPUT);
-  //Serial.begin(115200);
-  //servo.attach(sPin);
-  //servo.write(90);
 }
 
 bool FireFighting::fireScan(){
+  //Complete reset of variables, just in case
+  fireStarted = false;
+  viableCount = 0;
+  reading = 0;
+  firstReading = 0;
+  
   //Bring the servo to the zero position before it starts reading anything
-  Serial1.println("Entering firescan");
   servo.write(35);
-  delay(200);
-
-  //Sweep Through 
-  for (int i=35; i<145; i++) {
-    servo.write(i);
-    float firstReading, reading;
-    
+  delay(200); //wait before taking readings
+  
+  //Sweep Through from 35 to 145 degrees
+  for (int i=10; i<170; i++) {
+    servo.write(i); //move the servo to that particular position
+        
     for(int j = 0; j < 10; j++){
       firstReading += analogRead(pin);
     }
-  
-    reading = firstReading/10;
-    firstReading = 0;
+    
+    reading = firstReading/10; //average out the readings
+    firstReading = 0; //reset
 
+    Serial1.println(reading);
     //Logging down the first position of the fire
-    if((reading > 700) && (fireStarted == false) && (i > 40))
+    if((reading > 700) && (fireStarted == false))
     {
       fireStart = i;
       //this variable is used as the primary variable that indicates the presence of a fire
@@ -45,28 +47,33 @@ bool FireFighting::fireScan(){
     }
   
     //Viable Count Log
-    if((reading > 700) && (i > 45) && (i < 140)){ //i < 140 & i > 45 "blinds" the robot to potential fires along its peripheries, this is used to prevent the error bug from appearing
+    if(reading > 700){ 
       viableCount++;
-      Serial.println(viableCount);
+      //Serial.println(viableCount);
     }
       
-    if((fireStarted == true) && (reading < 700) && (fireDetected == false) && (viableCount >= 10) && (i < 140)) 
+    if((fireStarted == true) && (reading < 700) && (viableCount >= 10)) 
     {
       fireEnd = i;
       fireDetected = true;    
-    }
+    }   
+    //Delay for smoother motor movement
     delay(40);
   } 
-
+  
+    Serial1.println(viableCount);
   if(fireDetected == true){
     firePos = (fireEnd + fireStart)/2;
+    //Complete reset
     fireDetected = false;
     fireStarted = false;
     viableCount = 0;
     return true;
   } else {
     servo.write(90);
+    //Complete reset
     fireStarted = false;
+    fireDetected = false;
     viableCount = 0;
     return false;
   }
@@ -97,15 +104,18 @@ void FireFighting::activateFan()
   }
 }
 
+
 void FireFighting::fireFight()
 {
-  Serial1.println("fire check");
+  Serial1.println("Entered Fire Fighting");
   bool fireStat = fireScan();
-  while(fireStat == true){
-    
+  while(fireStat == true && !(TimesRun > 1)){
     activateFan();
     delay(200);
     fireStat = fireScan();
+    TimesRun++;
   }
+  TimesRun = 0;
   servo.write(90);
 }
+
