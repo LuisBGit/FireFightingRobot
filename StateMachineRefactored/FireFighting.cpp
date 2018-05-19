@@ -39,7 +39,7 @@ bool FireFighting::fireScan(){
 
     Serial1.println(reading);
     //Logging down the first position of the fire
-    if((reading > 100) && (fireStarted == false))
+    if((reading > 200) && (fireStarted == false))
     {
       fireStart = i;
       //this variable is used as the primary variable that indicates the presence of a fire
@@ -47,11 +47,11 @@ bool FireFighting::fireScan(){
     }
   
     //Viable Count Log
-    if(reading > 100){ 
+    if(reading > 200){ 
       viableCount++;
     }
       
-    if((fireStarted == true) && (reading < 100)) 
+    if((fireStarted == true) && (reading < 200)) 
     {
       fireEnd = i;
       fireDetected = true; 
