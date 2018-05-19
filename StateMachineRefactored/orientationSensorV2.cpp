@@ -42,3 +42,7 @@ void orientationSensor::recalibrate() {
   out = 0;
 }
 
+float orientationSensor::getGyro(){
+  return gz - zBias;
+}
+
