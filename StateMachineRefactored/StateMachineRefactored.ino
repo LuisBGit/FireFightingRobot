@@ -267,7 +267,9 @@ void decisionMaking() {
       prevB = sensors.getRightBack();
       break;
     case(Firefight):
+    Serial1.println("Entering FF");
       fireFightingSystem.fireFight();
+    Serial1.println("Leaving FF");
       dodgeFSM = START;
       movement.changeState((int)Dodge);
       break;
