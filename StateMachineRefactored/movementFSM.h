@@ -11,6 +11,9 @@ class movementFSM {
     int getState();
     void changeDodgeMode(int mode);
     int getDodgeMode();
+    void cornering(float yawReading);
+    void startupStraight();
+
 
   private:
 
@@ -32,10 +35,8 @@ class movementFSM {
     const byte right_front = 51;
 
     int mod = 3;
-
-
+    
     void normalMove(float rightFront, float rightBack, int numberCorners);
-    void cornering(float yawReading);
     void dodge(float frontRight, float frontLeft);
     void firefight();
 

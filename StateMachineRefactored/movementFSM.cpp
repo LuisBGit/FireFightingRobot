@@ -62,6 +62,10 @@ void movementFSM::dodge(float frontRight, float frontLeft) {
 
 }
 
+void movementFSM::startupStraight() {
+  handler.moveHandler(0, 3, 0, 0 , 0, 3,0,0);
+}
+
 void movementFSM::changeDodgeMode(int mode) {
   mod = mode;
 }
