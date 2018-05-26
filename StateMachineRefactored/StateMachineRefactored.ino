@@ -13,7 +13,7 @@
 
 FireFighting fireFightingSystem;
 
-
+float prevY = 0;
 float conv = PI/180;
 float dodgeRef = 0;
 int dodgeBuffer = 0;
@@ -23,6 +23,7 @@ distanceCalcV2 xDistanceSpiral;
 int normalMoveState = 0;
 int sidePass = 0;
 bool forceKill = false;
+bool freshStart = true;
 //************************************************************
 
 int numberCorners = 0;
@@ -30,9 +31,9 @@ int numberCorners = 0;
 void setup() {
   SerialCom = &Serial1;
   SerialCom->begin(115200);
-  servo.attach(servoPin);
-  servo.write(45);
-  SerialCom->println("setup");
+  //servo.attach(servoPin);
+  //servo.write(45);
+  //SerialCom->println("setup");
   pinMode(45, OUTPUT);
   digitalWrite(45, LOW);
   delay(500);
@@ -42,6 +43,7 @@ void loop() {
   static STATE machine_state = INITIALISING;
 
   //FSM
+
 
   switch (machine_state) {
      case INITIALISING:
@@ -60,7 +62,7 @@ void loop() {
 
 STATE initialise() {
 
-  fireFightingSystem.firefightingSetup(pin, 45, 3, servo); //Initialising the fireFightingSystem
+  fireFightingSystem.firefightingSetup(pin, 45, 3); //Initialising the fireFightingSystem
 
 
   movement.setupMovement();
@@ -68,13 +70,75 @@ STATE initialise() {
   sensors.setupSensors();
 
   sensors.readIRs();
-  servo.write(88);
+  prevY = sensors.getUltra();
+  //servo.write(88);
   delay(100);
   xDistanceSpiral.restartDistance(sensors.getUltra());
   xDistance.restartDistance(sensors.getUltra());
   yDistance.restartDistance(sensors.getRightFront());
+  startUp();
   return RUNNING;
 }
+
+void startUp() {
+
+
+
+
+  boolean startUp = true;
+  while (startUp) {
+      currentTime = millis();
+      systemTiming();
+    
+      startRoamCheck();
+      safetySwitchCheck();
+     
+     switch(startSeq) {
+        case spin:
+          movement.slowSpin(55);
+          break;
+        case straight:
+          movement.startupStraight(6);
+          break;
+        case align:
+          movement.slowSpin(25);
+          if (within(sensors.getRightFront(), sensors.getRightBack(), 5)) {
+            movement.stopMovement();
+            startUp = false;
+          }
+          break;
+        case strafeOut:
+          movement.strafeStart(-7);
+          break;
+     }
+      safetySwitchCheck();
+      startRoamCheck();
+      
+  }
+}
+
+void safetySwitchCheck() {
+  float sideAverage = (sensors.getRightBack() + sensors.getRightFront()) / 2;
+  if ((sideAverage < 20) && startSeq != align) {
+    startSeq = strafeOut;
+  }
+}
+
+void startRoamCheck() {
+    if (obCheck() && startSeq != align) {
+     if (wallCheck()) {
+        startSeq = align;
+      } else {
+        startSeq = spin;
+      }
+   } else {
+     startSeq = straight;
+   }
+}
+ 
+
+
+//State Ending Bracket
 
 
 STATE runCycle() {
@@ -97,7 +161,12 @@ STATE runCycle() {
     movement.runCurrentState(sensors.getFrontRight(), sensors.getFrontLeft(), sensors.getRightFront(), sensors.getRightBack(), sensors.getYaw(), numberCorners);
   }*/
 
+  if (currentTime - msgTime >= 200) {
+    msgTime = currentTime;
+    sendToPC(1, (sensors.getRightBack() + sensors.getRightFront())/ 2, fabs(sensors.getUltra() - prevY), numberCorners, (int)movement.getState());
+  }
 
+  
   if (batterySafetyTrigger == true) {
     return STOPPED;
   }
@@ -112,9 +181,9 @@ STATE runCycle() {
 void systemTiming() {
     if (currentTime  - pingTiming >= 115) {
      pingTiming = currentTime;
+     prevY = sensors.getUltra();
      sensors.readUltra();
-     SerialCom->println(sensors.getUltra());
-     
+     //SerialCom->println(sensors.getUltra());
       //SerialCom->println(xDistanceSpiral.getDistance(sensors.getUltra()));
       if(sensors.getUltra() <= 20 && movement.getState() == (int)NormalMove){
       movement.stopMovement();
@@ -149,7 +218,7 @@ void decisionMaking() {
               forceKill = true;
               sensors.readUltra();
               sensors.readIRs();
-              servo.write(88);
+              //servo.write(88);
               if (wallCheck() == false) {
                 movement.changeState((int)Firefight);
                } else {
@@ -166,6 +235,7 @@ void decisionMaking() {
       break;
     case(Cornering):
       forceKill = false;
+      prevY = 0;
       if(sensors.getYaw() > 90) {
           movement.changeState(4);
           delay(100);
@@ -177,7 +247,7 @@ void decisionMaking() {
       }
       break;
     case(Dodge):
-       Serial1.println("Dodging Entered");
+       //Serial1.println("Dodging Entered");
        switch (dodgeFSM) {
          case (START):
             dodgeDirection =(int)LEFT;
@@ -267,9 +337,9 @@ void decisionMaking() {
       prevB = sensors.getRightBack();
       break;
     case(Firefight):
-    Serial1.println("Entering FF");
+    //Serial1.println("Entering FF");
       fireFightingSystem.fireFight();
-    Serial1.println("Leaving FF");
+    //Serial1.println("Leaving FF");
       dodgeFSM = START;
       movement.changeState((int)Dodge);
       break;
@@ -280,13 +350,25 @@ void decisionMaking() {
 }
 
 
+void sendToPC(int startMSG, float x, float y, int turns, int state) {
+  Serial1.print(startMSG);
+  Serial1.print(",");
+  Serial1.print(x);
+  Serial1.print(",");
+  Serial1.print(y);
+  Serial1.print(",");
+  Serial1.print(turns);
+  Serial1.print(",");  
+  Serial1.println(state);
+}
+
 
 boolean finishedLength() {
   if(within(fabs(xDistanceSpiral.getDistance(sensors.getUltra())), (120 - (15+13*(numberCorners/4))), 5)) {
-    SerialCom->println("Length finished");
+    //SerialCom->println("Length finished");
     return true;
   } else {
-    SerialCom->println("Not Done");
+    //SerialCom->println("Not Done");
     return false;
   }
 }
@@ -294,28 +376,36 @@ boolean finishedLength() {
 
 boolean wallCheck() {
   boolean ultra = sensors.getUltra() <= 20;
-  boolean left = within(sensors.getFrontLeft(), sensors.getUltra() - 3, 75);
-  boolean right = within(sensors.getFrontRight(),sensors.getUltra() - 3, 75);
-     SerialCom->print(left);
+  boolean left = within(sensors.getFrontLeft(), sensors.getUltra(), 60);
+  boolean right = within(sensors.getFrontRight(),sensors.getUltra(), 60);
+     /*SerialCom->print(left);
      SerialCom->print(", ");
      SerialCom->print(ultra);
      SerialCom->print(", ");
-     SerialCom->println(right);
+     SerialCom->println(right);*/
   if (ultra && left && right) {
-    SerialCom->println("WALL");
+    /*SerialCom->println("WALL");
      SerialCom->print(sensors.getFrontLeft());
      SerialCom->print(", ");
      SerialCom->print(sensors.getUltra());
      SerialCom->print(", ");
-     SerialCom->println(sensors.getFrontRight());
+     SerialCom->println(sensors.getFrontRight());*/
     return true;
   } else {
-    SerialCom->println("NO WALL");
+    /*SerialCom->println("NO WALL");
          SerialCom->print(sensors.getFrontLeft());
      SerialCom->print(", ");
      SerialCom->print(sensors.getUltra());
      SerialCom->print(", ");
-     SerialCom->println(sensors.getFrontRight());
+     SerialCom->println(sensors.getFrontRight());*/
+    return false;
+  }
+}
+
+boolean obCheck() {
+  if ((sensors.getUltra() < 12) || (sensors.getFrontRight() < 12) || (sensors.getFrontLeft() < 12)) {
+    return true;
+  } else {
     return false;
   }
 }

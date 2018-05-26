@@ -4,12 +4,12 @@
 #include "Servo.h"
 
 //Setting up the analog input
-void FireFighting::firefightingSetup (int pPin, int fPin, int sPin, Servo &attachedServo)
+void FireFighting::firefightingSetup (int pPin, int fPin, int sPin)
 {
   this->pin = pPin;
   fanPin = fPin;
   servoPin = sPin;
-  this->servo = attachedServo;
+  //this->servo = attachedServo;
   
   pinMode(fanPin, OUTPUT);
   pinMode(pin, INPUT);
@@ -37,7 +37,7 @@ bool FireFighting::fireScan(){
     reading = firstReading/10; //average out the readings
     firstReading = 0; //reset
 
-    Serial1.println(reading);
+    //Serial1.println(reading);
     //Logging down the first position of the fire
     if((reading > 200) && (fireStarted == false))
     {
@@ -61,7 +61,7 @@ bool FireFighting::fireScan(){
     delay(40);
   } 
   
-    Serial1.println(viableCount);
+    //Serial1.println(viableCount);
   if(fireDetected == true){
     firePos = (fireEnd + fireStart)/2;
     //Complete reset
@@ -84,15 +84,17 @@ void FireFighting::activateFan()
   servo.write(firePos);
   delay(200);
   int pointRead = analogRead(pin);
-  Serial1.println(pointRead);
-  while(pointRead > 100)
+  fireStartTime = millis(); //get the starting time for the fire
+  //Serial1.println(pointRead);
+  while((pointRead > 100) && (currentTime - fireStartTime >= 20000))
   {
+    currentTime = millis();
     digitalWrite(fanPin,HIGH); 
-    Serial1.println("Fan On"); 
+    //Serial1.println("Fan On"); 
     delay(200); 
     pointRead = analogRead(pin);
   }  
-  Serial1.println("Fan Off");
+ // Serial1.println("Fan Off");
   digitalWrite(fanPin,LOW);
   //Slowly return back to 35 degrees origin point
   if(firePos > 25){
@@ -110,6 +112,7 @@ void FireFighting::activateFan()
 
 void FireFighting::fireFight()
 {
+  servo.attach(servoPin);
   bool fireStat = fireScan();
   if(fireStat == true){
     activateFan();
@@ -123,9 +126,8 @@ void FireFighting::fireFight()
     Serial1.println(firePos);
     delay(1000);
     */
+   servo.detach();
   }
   
-  
-  servo.write(90);
 }
 

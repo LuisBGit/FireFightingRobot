@@ -66,6 +66,7 @@ long batteryTiming = 0;
 long mpuTimer = 0;
 unsigned long sendTime = 0;
 
+unsigned long msgTime = 0;
 
 unsigned long decisionTiming = 0;
 unsigned long motorTiming = 0;
@@ -100,6 +101,17 @@ enum dodgeDirection {
   LEFT
 };
 
+enum startSequence {
+  spin,
+  straight,
+  align,
+  strafeOut
+};
+
+startSequence startSeq = straight;
+
 dodgeSequence dodgeFSM = START;
+
+
 
 //*************************************************************ENUMERATION*********************************************************

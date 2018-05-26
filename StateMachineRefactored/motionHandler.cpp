@@ -69,9 +69,9 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
           break;
         case (rotate):
           //Serial1.println("rotate");
-          Serial1.print(frontReading);
+          /*Serial1.print(frontReading);
           Serial1.print(", ");
-          Serial1.println(backReading);
+          Serial1.println(backReading);*/
           if (error > 1) {
               topLeftWrite = 1600;
               botLeftWrite = 1600;

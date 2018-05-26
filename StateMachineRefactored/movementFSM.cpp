@@ -34,8 +34,13 @@ void movementFSM::normalMove(float rightFront, float rightBack, int numberCorner
   if (numberCorners > 10) {
     handler.moveHandler(0, 5 , 0,  rightFront, rightBack, 3, ((numberCorners-1)/4)*14,0);
   } else {
-  handler.moveHandler(0, 5 , 0,  rightFront, rightBack, 0, ((numberCorners-1)/4)*14,0);
+    handler.moveHandler(0, 5 , 0,  rightFront, rightBack, 0, ((numberCorners-1)/4)*14,0);
   }
+}
+
+//Used for slowly spinning around for the start-up mode
+void movementFSM::slowSpin(float moveSpeed){
+  handler.moveHandler(0, 0, moveSpeed, 0, 0, 5, 0, 0);
 }
 
 void movementFSM::cornering(float yawReading) {
@@ -56,10 +61,15 @@ void movementFSM::dodge(float frontRight, float frontLeft) {
     case (3):
       handler.stopMotor();
       break;
-
   }
+}
 
+void movementFSM::startupStraight(float moveSpeed) {
+  handler.moveHandler(0, moveSpeed, 0, 0 , 0, 3,0,0);
+}
 
+void movementFSM::strafeStart(float moveSpeed) {
+  handler.moveHandler(-1*moveSpeed, 0, 0, 0 , 0, 3,0,0);//-5
 }
 
 void movementFSM::changeDodgeMode(int mode) {

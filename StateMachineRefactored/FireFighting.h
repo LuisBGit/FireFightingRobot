@@ -4,7 +4,7 @@
 class FireFighting
 {
 	public:
-		void firefightingSetup(int pPin, int fPin, int sPin, Servo &attachedServo);
+		void firefightingSetup(int pPin, int fPin, int sPin);
     bool fireScan();
 		void activateFan();
     void fireFight();
@@ -12,6 +12,7 @@ class FireFighting
 	private:
     int fanPin;
     int servoPin;
+    unsigned long fireStartTime, currentTime;
 
     float reading = 0;
     float firstReading = 0;
