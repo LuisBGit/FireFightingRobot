@@ -104,7 +104,7 @@ void startUp() {
 
     //STATE SPINNING LOOKING FOR A WALL
     while(spin == true){
-      Serial1.println("Spin State");
+      Serial1.println("Spin While Loop");
       currentTime = millis(); //takes the current time
     
 
@@ -129,10 +129,10 @@ void startUp() {
           Serial1.println("Found Wall!");
           spin = false; 
           wallFound = true;// < -------------------------------------------  EXIT CONDITION HERE
-          movement.stopMovement();  
+          movement.stopMovement();  //<----STOP MOVEMENT
        }
 
-       if(currentTime - startTime >= 12000) { //if the time beyond 12 seconds and nothing has changed, stop spinning and move forward
+       if(currentTime - startTime >= 6000) { //if the time beyond 12 seconds and nothing has changed, stop spinning and move forward
           spin = false; //<-------------------- EXIT CONDITION FROM THIS MAIN SPIN LOOP
           rePosition = true; //<---------------- SETS ENTRY CONDITION FOR THE REPOSITIONING LOOP
           startTime = currentTime; 
@@ -157,13 +157,14 @@ void startUp() {
         boolean objectRight = reposRight < 10;
         boolean objectCentre = reposUltra < 10;
         
-        if (objectLeft||objectRight||objectCentre){ //if there is an object in the way
-          movement.stopMovement(); //stop
+        if ((objectLeft||objectRight||objectCentre) && !spinAvoid){ //if there is an object in the way
+          movement.stopMovement(); //STOP
           spinAvoid = true; //set the flag for spinning to be true
         }
   
         if(spinAvoid == true){ //<-------------ENTRY CONDITION (Set to true in the previous statement)
           while(objectLeft || objectCentre || objectRight){
+          Serial1.println("spinAvoid Loop");
             //Read the sensors
             sensors.readUltra();
             sensors.readIRs();       
@@ -181,7 +182,7 @@ void startUp() {
         } else if(spinAvoid == false) {
           movement.startupStraight(); //drive forward
           currentTime = millis(); //take the current time reading now
-          if(currentTime - startTime >= 2000){
+          if(currentTime - startTime >= 4000){
             startTime = millis();
             rePosition = false; //<------------------------- EXIT CONDITION HERE
             spin = true; // <----------------------------- EXIT CONDITION HERE
@@ -207,6 +208,7 @@ void startUp() {
         boolean wallCentre = (ultraWall < 15) && (spin == false);
         
         while((!wallLeft && !wallRight && !wallCentre) && (spin == false)){   
+          Serial1.println("Straight Drive Loop");
           movement.startupStraight(); //Drive straight
           //Read the sensors
           sensors.readUltra();
@@ -219,7 +221,7 @@ void startUp() {
           wallCentre = (ultraWall < 15) && (spin == false);
           delay(110);
         }
-        movement.stopMovement();
+        movement.stopMovement(); //STOP
         wallReached = true;
         spin = false; // <--------------------------- EXIT CONDITION HERE TO ENTER THE OTHER "ELSE IF" STATEMENT (the only thing that changes is the wallReached, spin should have never changed)
     } else if((wallReached == true) && (spin == false)){ //if the wall has been reached, then commence the correction spin
@@ -227,15 +229,18 @@ void startUp() {
             unsigned long correctionSpin = 0;  
             movement.slowSpin(15);
             delay(1000);
-            while (!(within(sensors.getRightFront(), sensors.getRightBack(), 10))) {
+            while (!(within(sensors.getRightFront(), sensors.getRightBack(), 5))) {
               currentTime = millis();
-              Serial1.print(" END GAME BABY");
+              Serial1.println("Final Loop");
                if (currentTime- correctionSpin >= 16) {
                   correctionSpin = currentTime;
                   sensors.readIRs();
+                  Serial1.print(sensors.getRightFront());
+                  Serial1.print(",");
+                  Serial1.println(sensors.getRightBack());
                 }
             }
-            movement.stopMovement();
+            movement.stopMovement(); //STOP
             startupState = false; //<------------------------- COMPLETE EXIT CONDITION
     } 
   }
