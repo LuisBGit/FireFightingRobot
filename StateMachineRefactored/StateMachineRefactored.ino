@@ -80,7 +80,10 @@ STATE initialise() {
 void startUp() {
 
   //Function variables all initialised here
+  //Mini-States inside startUp state
   boolean wallReached = false;
+  boolean rePosition = false;
+  
   boolean ultraMatching = false;
   boolean leftMatching = false;
   boolean rightMatching =false;
@@ -88,9 +91,19 @@ void startUp() {
   boolean driveLeft = false;
   boolean driveRight = false;
   boolean driveCentre = false; 
-  unsigned long startTime = 0;
+
+  //Timing code for repositioning 
+  unsigned long startTime = 0; //start time 
    
   while(spin == true){
+    currentTime = millis(); //takes the current time
+    
+    if(currentTime - startTime >= 12000) { //if the time beyond 12 seconds and nothing has changed, stop spinning and move forward
+        spin = false; 
+        rePosition = true;
+        startTime = currentTime;
+    } 
+    
      //Spin a lower speed rate than the standard speed of a normal speed
      movement.slowSpin(15);
      //Read the sensors
@@ -132,13 +145,24 @@ void startUp() {
      delay(100);
   }
 
-  if(wallReached == false){
+  //Reposition the robot by driving forward for 3 seconds
+  if((spin == false) && (rePosition == true)){
+      movement.slowForward(3); //drive forward
+      currentTime = millis(); //take the current time reading now
+      if(currentTime - startTime >= 3000){
+        startTime = millis();
+        spin = true;
+      }
+  }
+
+  //This happens AFTER the spin has been done and the wall has been found 
+  if((wallReached == false) && (spin == false)){
       while((driveLeft && driveRight && driveCentre) && (spin == false)){
-        movement.slowForward(15);
+        movement.slowForward(3);
       }
       movement.stopMovement();
       wallReached = true;
-  } else if(wallReached == true){ //if the wall has been reached, then commence the correction spin
+  } else if((wallReached == true) && (spin == false)){ //if the wall has been reached, then commence the correction spin
           unsigned long correctionSpin = 0;  
           movement.cornering(0);
           delay(1000);
