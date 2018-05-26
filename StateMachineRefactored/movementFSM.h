@@ -14,8 +14,6 @@ class movementFSM {
     void cornering(float yawReading);
     void startupStraight();
     void slowSpin(float moveSpeed);
-    void slowForward(float moveSpeed);
-
 
   private:
 

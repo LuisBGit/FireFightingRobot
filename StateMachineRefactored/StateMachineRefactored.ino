@@ -23,6 +23,7 @@ distanceCalcV2 xDistanceSpiral;
 int normalMoveState = 0;
 int sidePass = 0;
 bool forceKill = false;
+bool freshStart = true;
 //************************************************************
 
 int numberCorners = 0;
@@ -83,6 +84,10 @@ void startUp() {
   //Mini-States inside startUp state
   boolean wallReached = false;
   boolean rePosition = false;
+  boolean startupState = true;
+  boolean spinAvoid = false; 
+  boolean wallFound = false;
+
   
   boolean ultraMatching = false;
   boolean leftMatching = false;
@@ -91,144 +96,268 @@ void startUp() {
   boolean driveLeft = false;
   boolean driveRight = false;
   boolean driveCentre = false; 
-
+  
   //Timing code for repositioning 
   unsigned long startTime = 0; //start time 
-   
-  while(spin == true){
-    currentTime = millis(); //takes the current time
+
+  while(startupState){   
+
+    //STATE SPINNING LOOKING FOR A WALL
+    while(spin == true){
+      Serial1.println("Spin State");
+      currentTime = millis(); //takes the current time
     
-    if(currentTime - startTime >= 12000) { //if the time beyond 12 seconds and nothing has changed, stop spinning and move forward
-        spin = false; 
-        rePosition = true;
-        startTime = currentTime;
-    } 
-    
-     //Spin a lower speed rate than the standard speed of a normal speed
-     movement.slowSpin(15);
-     //Read the sensors
-     sensors.readUltra();
-     sensors.readIRs();
 
-     //Sensor Reading
-     float ultra = sensors.getUltra();
-     float left = sensors.getFrontLeft();
-     float right = sensors.getFrontRight();
 
-     //Variables that whether the robot has driven close enough to the wall or not
-     boolean driveLeft = (left > 10) && (spin == false);
-     boolean driveRight = (right > 10) && (spin == false);
-     boolean driveCentre = (ultra > 10) && (spin == false);
-      
-     ultraMatching = (ultra >= left - 3) && (ultra <= left + 3) && (ultra >= right - 3) && (ultra <= right + 3);
-     leftMatching = (left >= ultra - 3) && (left <= ultra + 3) && (left >= right - 3) && (left <= right + 3);
-     rightMatching = (right >= ultra - 3) && (right <= ultra + 3) && (right >= left - 3) && (right <= left + 3);
-     
-     Serial1.print("Readings: ");
-     Serial1.print(left);
-     Serial1.print(":");
-     Serial1.print(ultra);
-     Serial1.print(":");
-     Serial1.println(right);
-     Serial1.print("Checks: ");
-     Serial1.print(driveLeft);
-     Serial1.print(":");
-     Serial1.print(driveCentre);
-     Serial1.print(":");
-     Serial1.println(driveRight);
+      //Spin a lower speed rate than the standard speed of a normal speed
+       movement.slowSpin(15);
+       //Read the sensors
+       sensors.readUltra();
+       sensors.readIRs();
+  
+       //Sensor Reading
+       float ultra = sensors.getUltra();
+       float left = sensors.getFrontLeft();
+       float right = sensors.getFrontRight();
 
-     if(ultraMatching && leftMatching && rightMatching){
-        Serial1.println("Found Wall!");
-        spin = false; //turn the spin value off to not re-enter the loop
-        movement.stopMovement();  
-     }
-     delay(100);
-  }
+       //Checks for MATCHING values but NOT the distance
+       ultraMatching = (ultra >= left - 3) && (ultra <= left + 3) && (ultra >= right - 3) && (ultra <= right + 3);
+       leftMatching = (left >= ultra - 3) && (left <= ultra + 3) && (left >= right - 3) && (left <= right + 3);
+       rightMatching = (right >= ultra - 3) && (right <= ultra + 3) && (right >= left - 3) && (right <= left + 3);
 
-  //Reposition the robot by driving forward for 3 seconds
-  if((spin == false) && (rePosition == true)){
-      movement.slowForward(3); //drive forward
-      currentTime = millis(); //take the current time reading now
-      if(currentTime - startTime >= 3000){
-        startTime = millis();
-        spin = true;
-      }
-  }
+       if(ultraMatching && leftMatching && rightMatching){ //if everything MATCHES (and matches only, does not care about  distance in this case)
+          Serial1.println("Found Wall!");
+          spin = false; 
+          wallFound = true;// < -------------------------------------------  EXIT CONDITION HERE
+          movement.stopMovement();  
+       }
 
-  //This happens AFTER the spin has been done and the wall has been found 
-  if((wallReached == false) && (spin == false)){
-      while((driveLeft && driveRight && driveCentre) && (spin == false)){
-        movement.slowForward(3);
-      }
-      movement.stopMovement();
-      wallReached = true;
-  } else if((wallReached == true) && (spin == false)){ //if the wall has been reached, then commence the correction spin
-          unsigned long correctionSpin = 0;  
-          movement.cornering(0);
-          delay(1000);
-          while (!(within(sensors.getRightFront(), sensors.getRightBack(), 20))) {
-            currentTime = millis();
-             if (currentTime- correctionSpin >= 16) {
-                unsigned long dt = millis() - correctionSpin;
-                correctionSpin = currentTime;
-                sensors.readIRs();
-              }
-          }
-          movement.stopMovement();
-  }
-
-/*
-      //Object detection  
-      objectLeft = (left < 10) && (spin == false);
-      objectRight = (right < 10) && (spin == false);
-      objectCentre = (ultra < 10) && (spin == false);
-      
-      if(objectLeft||objectRight||objectCentre){
-        movement.stopMovement();    
-      }
-      currentTime = millis();
-    
-    if(currentTime - startTime >= 6000 && spin == true) {
-      Serial1.println(currentTime);
-      spin = false;
-      startTime = currentTime;
-      movement.startupStraight();  
-    } else if (currentTime - startTime >= 8000 && spin == true) {
-      Serial1.println(currentTime);
-      spin = true;
-      startTime = currentTime;
-      movement.cornering(0);
+       if(currentTime - startTime >= 12000) { //if the time beyond 12 seconds and nothing has changed, stop spinning and move forward
+          spin = false; //<-------------------- EXIT CONDITION FROM THIS MAIN SPIN LOOP
+          rePosition = true; //<---------------- SETS ENTRY CONDITION FOR THE REPOSITIONING LOOP
+          startTime = currentTime; 
+      } 
+       delay(100); 
     }
 
-
-
-
-    if(ultraMatching && leftMatching && rightMatching){
-      Serial1.println("Wall Found");
-      movement.stopMovement();  
+    //Reposition the robot by driving forward for 3 seconds
+    if((spin == false) && (rePosition == true)){ //<------------------------------------ENTRY CONDITION (This is met every 12 seconds)
+      Serial1.println("Reposition State");
+       //Read the sensors
+       sensors.readUltra();
+       sensors.readIRs();
+  
+       //Sensor Reading
+       float reposUltra = sensors.getUltra();
+       float reposLeft = sensors.getFrontLeft();
+       float reposRight = sensors.getFrontRight();
       
-      if(wallCheck() == true){        
-          unsigned long correctionSpin = 0;  
-          movement.cornering(0);
-          delay(1000);
-          while (!(within(sensors.getRightFront(), sensors.getRightBack(), 20))) {
-            currentTime = millis();
-
-             if (currentTime- correctionSpin >= 16) {
-                unsigned long dt = millis() - correctionSpin;
-                
-                correctionSpin = currentTime;
-                sensors.readIRs();
-              }
+        //Obstacle detection boolean statements that check whether the robot 
+        boolean objectLeft = reposLeft < 10;
+        boolean objectRight = reposRight < 10;
+        boolean objectCentre = reposUltra < 10;
+        
+        if (objectLeft||objectRight||objectCentre){ //if there is an object in the way
+          movement.stopMovement(); //stop
+          spinAvoid = true; //set the flag for spinning to be true
+        }
+  
+        if(spinAvoid == true){ //<-------------ENTRY CONDITION (Set to true in the previous statement)
+          while(objectLeft || objectCentre || objectRight){
+            //Read the sensors
+            sensors.readUltra();
+            sensors.readIRs();       
+            //Sensor Reading
+            reposUltra = sensors.getUltra();
+            reposLeft = sensors.getFrontLeft();
+            reposRight = sensors.getFrontRight();
+            objectLeft = reposLeft < 10;
+            objectRight = reposRight < 10;
+            objectCentre = reposUltra < 10;
+            movement.slowSpin(15);    
+            delay(110);
           }
-          movement.stopMovement();
-          break;
-      }
-
+          spinAvoid = false; //<---- EXIT CONDITION
+        } else if(spinAvoid == false) {
+          movement.startupStraight(); //drive forward
+          currentTime = millis(); //take the current time reading now
+          if(currentTime - startTime >= 2000){
+            startTime = millis();
+            rePosition = false; //<------------------------- EXIT CONDITION HERE
+            spin = true; // <----------------------------- EXIT CONDITION HERE
+          }   
+        }
+    }
+ 
+    //FINAL STATE AT THE WALL
+    if((wallReached == false) && (wallFound == true)){ // <------------------- ENTRY CONDITION (wallReached is by default false and spin is set to false at the end of the first while loop)
+        //Boolean variables that determine whether the robot has driven close enough to the wall or not
+       Serial1.println("Final State");
+       //Read the sensors
+       sensors.readUltra();
+       sensors.readIRs();
+  
+       //Sensor Reading
+       float ultraWall = sensors.getUltra();
+       float leftWall = sensors.getFrontLeft();
+       float rightWall = sensors.getFrontRight();
+       
+        boolean wallLeft = (leftWall < 15) && (spin == false);
+        boolean wallRight = (rightWall < 15) && (spin == false);
+        boolean wallCentre = (ultraWall < 15) && (spin == false);
+        
+        while((!wallLeft && !wallRight && !wallCentre) && (spin == false)){   
+          movement.startupStraight(); //Drive straight
+          //Read the sensors
+          sensors.readUltra();
+          sensors.readIRs();
+          ultraWall = sensors.getUltra();
+          leftWall = sensors.getFrontLeft();
+          rightWall = sensors.getFrontRight();
+          wallLeft = (leftWall < 15) && (spin == false);
+          wallRight = (rightWall < 15) && (spin == false);
+          wallCentre = (ultraWall < 15) && (spin == false);
+          delay(110);
+        }
+        movement.stopMovement();
+        wallReached = true;
+        spin = false; // <--------------------------- EXIT CONDITION HERE TO ENTER THE OTHER "ELSE IF" STATEMENT (the only thing that changes is the wallReached, spin should have never changed)
+    } else if((wallReached == true) && (spin == false)){ //if the wall has been reached, then commence the correction spin
+          Serial1.println("Exit State");
+            unsigned long correctionSpin = 0;  
+            movement.slowSpin(15);
+            delay(1000);
+            while (!(within(sensors.getRightFront(), sensors.getRightBack(), 10))) {
+              currentTime = millis();
+              Serial1.print(" END GAME BABY");
+               if (currentTime- correctionSpin >= 16) {
+                  correctionSpin = currentTime;
+                  sensors.readIRs();
+                }
+            }
+            movement.stopMovement();
+            startupState = false; //<------------------------- COMPLETE EXIT CONDITION
+    } 
+  }
+  
+  /*
+  while(startUpState){   
+    while(spin == true){
+      currentTime = millis(); //takes the current time
       
-    } */
+      if(currentTime - startTime >= 12000) { //if the time beyond 12 seconds and nothing has changed, stop spinning and move forward
+          spin = false; 
+          rePosition = true;
+          startTime = currentTime;
+      } 
+      
+       //Spin a lower speed rate than the standard speed of a normal speed
+       movement.slowSpin(15);
+       //Read the sensors
+       sensors.readUltra();
+       sensors.readIRs();
+  
+       //Sensor Reading
+       float ultra = sensors.getUltra();
+       float left = sensors.getFrontLeft();
+       float right = sensors.getFrontRight();
+  
+       //Variables that whether the robot has driven close enough to the wall or not
+       boolean driveLeft = (left > 10) && (spin == false);
+       boolean driveRight = (right > 10) && (spin == false);
+       boolean driveCentre = (ultra > 10) && (spin == false);
+        
+       ultraMatching = (ultra >= left - 3) && (ultra <= left + 3) && (ultra >= right - 3) && (ultra <= right + 3);
+       leftMatching = (left >= ultra - 3) && (left <= ultra + 3) && (left >= right - 3) && (left <= right + 3);
+       rightMatching = (right >= ultra - 3) && (right <= ultra + 3) && (right >= left - 3) && (right <= left + 3);
+       
+       Serial1.print("Readings: ");
+       Serial1.print(left);
+       Serial1.print(":");
+       Serial1.print(ultra);
+       Serial1.print(":");
+       Serial1.println(right);
+       Serial1.print("Checks: ");
+       Serial1.print(driveLeft);
+       Serial1.print(":");
+       Serial1.print(driveCentre);
+       Serial1.print(":");
+       Serial1.println(driveRight);
+  
+       if(ultraMatching && leftMatching && rightMatching){
+          Serial1.println("Found Wall!");
+          spin = false; //turn the spin value off to not re-enter the loop
+          movement.stopMovement();  
+       }
+       delay(100);
+    }
+  
+    //Reposition the robot by driving forward for 3 seconds
+    if((spin == false) && (rePosition == true)){
+       //Read the sensors
+       sensors.readUltra();
+       sensors.readIRs();
+  
+       //Sensor Reading
+       float reposUltra = sensors.getUltra();
+       float reposLeft = sensors.getFrontLeft();
+       float reposRight = sensors.getFrontRight();
+      
+        //Obstacle detection boolean statements
+        boolean objectLeft = reposLeft < 10;
+        boolean objectRight = reposRight < 10;
+        boolean objectCentre = reposUltra < 10;
+        boolean spinAvoid = false; 
+        
+        if(objectLeft||objectRight||objectCentre){ //if there is an object in the way
+          movement.stopMovement();  
+          spinAvoid = true; //set the flag for spinning to be true
+        }
+  
+        if(spinAvoid == true){
+          while(objectLeft || objectCentre || objectRight){
+            movement.slowSpin(15);    
+          }
+          spinAvoid = false;
+        } else if(spinAvoid == false) {
+          movement.startupStraight(); //drive forward
+          currentTime = millis(); //take the current time reading now
+          if(currentTime - startTime >= 2000){
+            startTime = millis();
+            rePosition = false;
+            spin = true;
+          }   
+        }
+    }
+  
+    //This happens AFTER the spin has been done and the wall has been found 
+    //This is the final state of the robot
+    if((wallReached == false) && (spin == false)){
+        while((driveLeft && driveRight && driveCentre) && (spin == false)){
+          movement.startupStraight();
+        }
+        movement.stopMovement();
+        wallReached = true;
+    } else if((wallReached == true) && (spin == false)){ //if the wall has been reached, then commence the correction spin
+            unsigned long correctionSpin = 0;  
+            movement.cornering(0);
+            delay(1000);
+            while (!(within(sensors.getRightFront(), sensors.getRightBack(), 20))) {
+              currentTime = millis();
+               if (currentTime- correctionSpin >= 16) {
+                  unsigned long dt = millis() - correctionSpin;
+                  correctionSpin = currentTime;
+                  sensors.readIRs();
+                }
+            }
+            movement.stopMovement();
+            startUpState = false;
+    }
+     delay(100);
+    }
+*/
 
-   delay(100);
+//State Ending Bracket
 }
 
 STATE runCycle() {
