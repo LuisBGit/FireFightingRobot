@@ -12,6 +12,7 @@ class FireFighting
 	private:
     int fanPin;
     int servoPin;
+    unsigned long fireStartTime, currentTime;
 
     float reading = 0;
     float firstReading = 0;

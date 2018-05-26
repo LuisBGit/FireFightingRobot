@@ -84,9 +84,11 @@ void FireFighting::activateFan()
   servo.write(firePos);
   delay(200);
   int pointRead = analogRead(pin);
+  fireStartTime = millis(); //get the starting time for the fire
   Serial1.println(pointRead);
-  while(pointRead > 100)
+  while((pointRead > 100) && (currentTime - fireStartTime >= 20000))
   {
+    currentTime = millis();
     digitalWrite(fanPin,HIGH); 
     Serial1.println("Fan On"); 
     delay(200); 
