@@ -38,6 +38,16 @@ void movementFSM::normalMove(float rightFront, float rightBack, int numberCorner
   }
 }
 
+//Used for slowly driving forward to the wall
+void movementFSM::slowForward(float moveSpeed){
+  handler.moveHandler(0, moveSpeed, 0, 0, 0, 3, 0 , 0);
+}
+
+//Used for slowly spinning around for the start-up mode
+void movementFSM::slowSpin(float moveSpeed){
+  handler.moveHandler(0, 0, moveSpeed, 0, 0, 3, 0, 0);
+}
+
 void movementFSM::cornering(float yawReading) {
   handler.moveHandler(0, 0, 20, 0 , 0, 5,0, yawReading);
 }
@@ -56,10 +66,7 @@ void movementFSM::dodge(float frontRight, float frontLeft) {
     case (3):
       handler.stopMotor();
       break;
-
   }
-
-
 }
 
 void movementFSM::startupStraight() {
