@@ -81,16 +81,15 @@ bool FireFighting::fireScan(){
 
 void FireFighting::activateFan()
 {
+  Serial1.print("Activate Fan");
   servo.write(firePos);
   delay(200);
   int pointRead = analogRead(pin);
-  fireStartTime = millis(); //get the starting time for the fire
-  //Serial1.println(pointRead);
-  while((pointRead > 100) && (currentTime - fireStartTime >= 20000))
+  
+  while(pointRead > 100)
   {
-    currentTime = millis();
     digitalWrite(fanPin,HIGH); 
-    //Serial1.println("Fan On"); 
+    Serial1.println(fireTime);
     delay(200); 
     pointRead = analogRead(pin);
   }  
@@ -98,12 +97,12 @@ void FireFighting::activateFan()
   digitalWrite(fanPin,LOW);
   //Slowly return back to 35 degrees origin point
   if(firePos > 25){
-    for(int i = firePos; i > 24; i--){
+    for(int i = firePos; i > 19; i--){
       servo.write(i);
       delay(40);
     }
   } else if(firePos < 35){
-    for(int i = firePos; i < 26; i++){
+    for(int i = firePos; i < 21; i++){
       servo.write(i);
       delay(40);
   }

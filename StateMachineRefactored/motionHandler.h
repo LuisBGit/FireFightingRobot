@@ -12,6 +12,12 @@ class motionHandler {
     void disableHandler();
     void setGains(float p, float i, float d);
     void enableHandler();
+    void moveForward(int speed_val);
+    void moveLeft(int speed_val);
+    void moveRight(int speed_val);
+    void rotateCW(int speed_val);
+    void rotateCCW(int speed_val);
+    void realignWall(float frontReading, float backReading);
   private:
     PID pidX, pidY, pidZ;
     unsigned int theta1, theta2, theta3, theta4;
@@ -25,6 +31,7 @@ class motionHandler {
       minor,
       rotate,
       wall,
+      
 
     };
 

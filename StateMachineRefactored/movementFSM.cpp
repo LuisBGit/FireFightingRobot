@@ -16,7 +16,7 @@ void movementFSM::runCurrentState(float frontRight, float frontLeft, float right
       normalMove(rightFront, rightBack, numberCorners);
       break;
     case (Cornering):
-      cornering(yaw);
+      cornering(rightFront, rightBack);
       break;
     case (Dodge):
       dodge(frontRight, frontLeft);
@@ -43,26 +43,54 @@ void movementFSM::slowSpin(float moveSpeed){
   handler.moveHandler(0, 0, moveSpeed, 0, 0, 5, 0, 0);
 }
 
-void movementFSM::cornering(float yawReading) {
-  handler.moveHandler(0, 0, 20, 0 , 0, 5,0, yawReading);
+void movementFSM::cornering(float frontReading, float backReading) {
+  switch(cornerState){
+    case(0):
+      handler.rotateCCW(200);
+      break;
+    case(1):
+      handler.rotateCW(200);
+      break;
+    case(2):
+      handler.moveForward(200);
+      break;
+    case(3):
+      handler.stopMotor();
+      break;
+    case(4):
+      handler.realignWall(frontReading, backReading);
+      break;
+
+  }
 }
 
 void movementFSM::dodge(float frontRight, float frontLeft) {
   switch (mod) {
     case (0):
-      handler.moveHandler(-5, 0, 0, 0 , 0, 3,0,0);//-5
+    //LEft
+      handler.moveLeft(200);//-5
       break;
     case (1):
-      handler.moveHandler(5, 0, 0, 0 , 0, 3,0,0);//5
+    //Forward
+      handler.moveRight(200);//5
       break;
     case (2):
-      handler.moveHandler(0, 3, 0, 0 , 0, 3,0,0);//3 second one
+    //Right
+      handler.moveForward(200);//3 second one
       break;
     case (3):
       handler.stopMotor();
       break;
+
   }
+
+
 }
+
+void movementFSM::changeCornerMode(int mode) {
+  cornerState= mode;
+}
+
 
 void movementFSM::startupStraight(float moveSpeed) {
   handler.moveHandler(0, moveSpeed, 0, 0 , 0, 3,0,0);

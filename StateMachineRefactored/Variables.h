@@ -101,11 +101,13 @@ enum dodgeDirection {
   LEFT
 };
 
+
 enum startSequence {
   spin,
   straight,
   align,
-  strafeOut
+  strafeOut,
+  strafeIn
 };
 
 startSequence startSeq = straight;

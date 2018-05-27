@@ -10,8 +10,9 @@ class movementFSM {
     void stopMovement();
     int getState();
     void changeDodgeMode(int mode);
+    void changeCornerMode(int mode);
     int getDodgeMode();
-    void cornering(float yawReading);
+    void cornering(float frontReading, float backReading);
     void startupStraight(float moveSpeed);
     void slowSpin(float moveSpeed);
     void strafeStart(float moveSpeed);
@@ -35,7 +36,7 @@ class movementFSM {
     const byte right_front = 51;
 
     int mod = 3;
-    
+    int cornerState = 0;
     void normalMove(float rightFront, float rightBack, int numberCorners);
     void dodge(float frontRight, float frontLeft);
     void firefight();

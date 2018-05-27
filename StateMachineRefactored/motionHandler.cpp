@@ -53,9 +53,10 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
       switch (currentType) {
         case (minor):
             //Serial1.println("minor");
-            if (frontReading <= (12 + desiredDistance) || backReading <= (12+ desiredDistance) || (frontReading == 999) || (backReading == 999)) {
+            if (frontReading <= (10 + desiredDistance) || backReading <= (10+ desiredDistance) || (frontReading == 999) || (backReading == 999)) {
               currentType = wall;
             }
+
             else if(fabs(error) >= 3 && desiredDistance<15){
               currentType = rotate;
             }
@@ -88,7 +89,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
           break;
         case(wall):
           //Serial1.println("wall");
-          if((frontReading == 999 || backReading == 999) || (frontReading <= 14+ desiredDistance && backReading <= 14+ desiredDistance)){
+          if((frontReading == 999 || backReading == 999) || (frontReading <= 10.5+ desiredDistance && backReading <= 10.5+ desiredDistance)){
             topLeftWrite = 1350;
             botLeftWrite = 1700;
             topRightWrite = 1350;
@@ -100,6 +101,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
             currentType = minor;
           }
           break;
+
       }
       break;
     case (noCorrection):
@@ -133,8 +135,46 @@ void motionHandler::stopMotor() {
   this->topRight.writeMicroseconds(1500);
 }
 
+void motionHandler::moveForward(int speed_val){
+  this->topLeft.writeMicroseconds(1500 + speed_val);
+  this->topRight.writeMicroseconds(1500 - speed_val);
+  this->botRight.writeMicroseconds(1500 - speed_val);
+  this->botLeft.writeMicroseconds(1500 +speed_val);
+}
+void motionHandler::moveLeft(int speed_val){
+  this->topLeft.writeMicroseconds(1500+speed_val);
+  this->topRight.writeMicroseconds(1500+speed_val);
+  this->botRight.writeMicroseconds(1500-speed_val);
+  this->botLeft.writeMicroseconds(1500-speed_val);
+}
+void motionHandler::moveRight(int speed_val){
+  this->topLeft.writeMicroseconds(1500-speed_val);
+  this->topRight.writeMicroseconds(1500-speed_val);
+  this->botRight.writeMicroseconds(1500+speed_val);
+  this->botLeft.writeMicroseconds(1500+speed_val);
+}
+void motionHandler::rotateCW(int speed_val){
+  this->topLeft.writeMicroseconds(1500+speed_val);
+  this->topRight.writeMicroseconds(1500+speed_val);
+  this->botRight.writeMicroseconds(1500+speed_val);
+  this->botLeft.writeMicroseconds(1500+speed_val);
+}
+void motionHandler::rotateCCW(int speed_val){
+  this->topLeft.writeMicroseconds(1500-speed_val);
+  this->topRight.writeMicroseconds(1500-speed_val);
+  this->botRight.writeMicroseconds(1500-speed_val);
+  this->botLeft.writeMicroseconds(1500-speed_val);
+}
 
-
+void motionHandler::realignWall(float frontReading, float backReading){
+  float error =frontReading-backReading;
+  if(error>0){
+    rotateCW(100);
+  }
+  else{
+    rotateCCW(100);
+  }
+}
 
 void motionHandler::disableHandler() {
   this->topLeft.detach();
