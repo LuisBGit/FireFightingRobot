@@ -84,9 +84,10 @@ void FireFighting::activateFan()
   servo.write(firePos);
   delay(200);
   int pointRead = analogRead(pin);
-  
-  while(pointRead > 100)
+  unsigned long timeOut = millis() + 15000;
+  while(pointRead > 650 && millis() <= timeOut)
   {
+    
     digitalWrite(fanPin,HIGH); 
     Serial1.println(fireTime);
     delay(200); 
