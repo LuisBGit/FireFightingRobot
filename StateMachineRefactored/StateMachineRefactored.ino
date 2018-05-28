@@ -24,10 +24,10 @@ int normalMoveState = 0;
 int sidePass = 0;
 bool forceKill = false;
 bool freshStart = true;
-int dodgeTime=0;
+unsigned long dodgeTime=0;
 int corneringState = 0;
 bool cornerSpace = 0;
-int cornerTime = 0;
+unsigned long cornerTime = 0;
 //************************************************************
 
 int numberCorners = 0;
@@ -66,7 +66,7 @@ void loop() {
 
 STATE initialise() {
 
-  fireFightingSystem.firefightingSetup(pin, 45, 2); //Initialising the fireFightingSystem
+  fireFightingSystem.firefightingSetup(pin, 45, 11); //Initialising the fireFightingSystem
 
 
   movement.setupMovement();
@@ -86,7 +86,7 @@ STATE initialise() {
 
 void startUp() {
 
-
+  Serial1.println("STARTUP");
 
   boolean startUp = true;
   while (startUp) {
@@ -96,26 +96,26 @@ void startUp() {
       startRoamCheck();
       safetySwitchCheck();
 
-      Serial1.print(sensors.getRightBack());
+      /*Serial1.print(sensors.getRightBack());
       Serial1.print(",");
       Serial1.print(sensors.getRightFront());
       Serial1.print(",");
       Serial1.print(sensors.getFrontRight());
       Serial1.print(",");
-      Serial1.println(sensors.getFrontLeft());
+      Serial1.println(sensors.getFrontLeft());*/
      
      switch(startSeq) {
         case spin:
-          Serial1.println("SPIN");
+          //Serial1.println("SPIN");
           movement.slowSpin(55);
           break;
         case straight:
-          Serial1.println("STRAIGHT");
+          //Serial1.println("STRAIGHT");
           movement.startupStraight(6);
           break;
         case align:
-          Serial1.println("ALIGN");
-          movement.slowSpin(25);
+          //Serial1.println("ALIGN");
+          movement.slowSpin(20);
           if ((sensors.getRightFront() != 999) && (sensors.getRightBack() != 999) && within(sensors.getRightFront(), sensors.getRightBack(), 5)) {
             movement.stopMovement();
             //startUp = false;
@@ -123,7 +123,7 @@ void startUp() {
           }
           break;
         case strafeIn:
-        Serial1.println("STRAFEIN");
+        //Serial1.println("STRAFEIN");
           movement.strafeStart(3);
           if ((sensors.getRightFront() != 999) && (sensors.getRightBack() != 999) &&  within((sensors.getRightBack() + sensors.getRightFront()) /2, 13, 5)) {
             movement.stopMovement();
@@ -133,7 +133,7 @@ void startUp() {
           break;
           
         case strafeOut:
-        Serial1.println("STRAFEOUT");
+        //Serial1.println("STRAFEOUT");
           movement.strafeStart(-7);
           delay(200);
           startSeq = straight;
@@ -157,7 +157,7 @@ void startRoamCheck() {
     if (obCheck() && (startSeq != align) && (startSeq != strafeIn)&& (startSeq != strafeOut)) {
      if (wallCheck()) {
         movement.slowSpin(55);
-        delay(1000);
+        delay(750);
         startSeq = align;
       } else {
         startSeq = spin;
@@ -225,6 +225,7 @@ void systemTiming() {
       //SerialCom->println(xDistanceSpiral.getDistance(sensors.getUltra()));
       if(sensors.getUltra() <= 20 && movement.getState() == (int)NormalMove){
       movement.stopMovement();
+     
       }
     }
     //IR Timing
@@ -250,6 +251,7 @@ void decisionMaking() {
 
   switch(movement.getState()) {
     case(NormalMove):
+        //Serial1.println("Normal");
          if (((sensors.getFrontLeft() <= 12 ) || (sensors.getFrontRight() <= 12) || (sensors.getUltra() <=20)) ){
               movement.stopMovement();
 
@@ -273,9 +275,9 @@ void decisionMaking() {
 
       break;
     case(Cornering):
-      forceKill = false;
+      //forceKill = false;
+      //Serial1.println("Corner");
       prevY = 0;
-      SerialCom->println(corneringState);
       switch(corneringState){
         //when you find the corner and spin 180 to check if there are any obstacles
         case(0):
@@ -289,7 +291,6 @@ void decisionMaking() {
                 //move to spin 90 CW state
                 corneringState = 1;
                 sensors.recalibrateYaw();
-                delay(20);
                 //determines whether there is space to trafe after turn
                 if(sensors.getUltra()>23*((numberCorners-1)/4)&& sensors.getFrontRight()>23*((numberCorners-1)/4) &&sensors.getFrontLeft()>23*((numberCorners-1)/4)){
                     cornerSpace = true;
@@ -303,13 +304,12 @@ void decisionMaking() {
         case(1):
           //SerialCom->println(sensors.getYaw());
           //after its done spinning 90
-          if(fabs(sensors.getYaw()) > 85) {
+          if(fabs(sensors.getYaw()) > 75) {
             //buffer to let it settle
             dodgeBuffer++;
             movement.changeCornerMode(3);
             if(dodgeBuffer>15){
               sensors.recalibrateYaw();
-              delay(20);
               //chnage to realign state
               movement.changeCornerMode(4);
               dodgeBuffer = 0;
@@ -366,8 +366,10 @@ void decisionMaking() {
       
       break;
     case(Dodge):
+      //Serial1.println("DODGE");
        switch (dodgeFSM) {
          case (START):
+            //Serial1.println("START");
             dodgeDirection =(int)LEFT;
             sidePass = 0;
             movement.changeDodgeMode(3);
@@ -383,7 +385,7 @@ void decisionMaking() {
             break;
 
          case (SIDEWAYS):
-           // SerialCom->println("Sideways");
+           //SerialCom->println("Sideways");
             if (sensors.getFrontRight() - prevR > 10 || sidePass ==1) {
               sidePass = 1;
               dodgeBuffer++;
@@ -398,14 +400,18 @@ void decisionMaking() {
                 dodgeBuffer = 0;
                 sidePass=0;
                 dodgeTime = millis();
+                Serial1.print("DODGE START: ");
+                Serial1.print(dodgeTime);
               }
 
             }
             break;
          case (FORWARD):
          //SerialCom->println("Forward");
-         if((sensors.getRightBack()-prevR)>5||millis()>(dodgeTime+1800)|| sidePass ==1)
+         if((millis() - dodgeTime>=  1800 ))
          {
+          //Serial1.print("END TIME: ");
+          //Serial1.println(millis());
            movement.changeDodgeMode(3);
            dodgeBuffer++;
            sidePass=1;
@@ -451,6 +457,7 @@ void decisionMaking() {
       prevB = sensors.getRightBack();
       break;
     case(Firefight):
+    //Serial1.println("FireFIGHT");
     //Serial1.println("Entering FF");
       fireFightingSystem.fireFight();
     //Serial1.println("Leaving FF");

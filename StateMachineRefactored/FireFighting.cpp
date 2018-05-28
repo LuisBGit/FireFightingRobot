@@ -11,8 +11,7 @@ void FireFighting::firefightingSetup (int pPin, int fPin, int sPin)
   servoPin = sPin;
   //this->servo = attachedServo;
   
-  pinMode(fanPin, OUTPUT);
-  pinMode(pin, INPUT);
+  //pinMode(pin, INPUT);
 }
 
 bool FireFighting::fireScan(){
@@ -81,7 +80,7 @@ bool FireFighting::fireScan(){
 
 void FireFighting::activateFan()
 {
-  Serial1.print("Activate Fan");
+  //Serial1.print("Activate Fan");
   servo.write(firePos);
   delay(200);
   int pointRead = analogRead(pin);
