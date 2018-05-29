@@ -27,6 +27,7 @@ class sensorManager {
     float getUltra();
     float ultrasonic();
     float getGyro();
+    float laserYaw();
 
 
   private:
@@ -37,7 +38,7 @@ class sensorManager {
     const unsigned int MAX_DIST = 23200;
     int irFrRiPin = 4;
     int irFrLePin = 5;
-
+    
     float resultFrontRight = 0;
     float resultFrontLeft = 0;
     float resultRightFront = 0;
@@ -46,7 +47,7 @@ class sensorManager {
     float ultraReading = 0;
 
     float yaw = 0;
-
+    
     IRShort irFrontRight;
     IRShort irFrontLeft;
     IRLong irRightFront;
