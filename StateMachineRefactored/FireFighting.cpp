@@ -57,7 +57,7 @@ bool FireFighting::fireScan(){
       break;
     }   
     //Delay for smoother motor movement
-    delay(40);
+    delay(50);
   } 
   
     //Serial1.println(viableCount);

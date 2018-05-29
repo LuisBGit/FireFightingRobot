@@ -45,8 +45,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
       currentState = noCorrection;
       break;
   }
-  if(fabs(error) > 5
-  ){ //Default 6
+  if(fabs(error) > 6){ //Default 6
     currentState = noCorrection;
   }
   switch (currentState) {
