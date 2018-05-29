@@ -53,9 +53,6 @@ float sensorManager::ultrasonic(){
   float duration;
   float filt;
   float distance;
-
-
-  
   digitalWrite(ultraTrig, LOW); //Force to low, just in case
   delayMicroseconds(2); //hold low
   digitalWrite(ultraTrig, HIGH); //turn pin on for 10us to send all required pulsess
@@ -68,6 +65,10 @@ float sensorManager::ultrasonic(){
   count++;
   distance = (filt * 0.0221) - 1.39; //Coverts to cm
   return distance;
+}
+
+float sensorManager::laserYaw() {
+  return atan2(resultRightFront - resultRightBack, 12) * (180/PI);
 }
 
 //Get Functions

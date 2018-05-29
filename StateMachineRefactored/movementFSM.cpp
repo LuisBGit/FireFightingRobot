@@ -10,13 +10,13 @@ void movementFSM::changeState(int movement) {
   currentState = (state)movement;
 }
 
-void movementFSM::runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yaw, int numberCorners) {
+void movementFSM::runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yawReading, int numberCorners, int yawInput) {
   switch (currentState) {
     case(NormalMove):
       normalMove(rightFront, rightBack, numberCorners);
       break;
     case (Cornering):
-      cornering(rightFront, rightBack);
+      cornering(rightFront, rightBack, yawReading,yawInput);
       break;
     case (Dodge):
       dodge(frontRight, frontLeft);
@@ -32,9 +32,9 @@ void movementFSM::runCurrentState(float frontRight, float frontLeft, float right
 
 void movementFSM::normalMove(float rightFront, float rightBack, int numberCorners) {
   if (numberCorners > 10) {
-    handler.moveHandler(0, 5 , 0,  rightFront, rightBack, 3, ((numberCorners-1)/4)*14,0);
+    handler.moveHandler(0, 5 , 0,  rightFront, rightBack, 3, (int((numberCorners-1)/4))*23,0);
   } else {
-    handler.moveHandler(0, 5 , 0,  rightFront, rightBack, 0, ((numberCorners-1)/4)*14,0);
+    handler.moveHandler(0, 5 , 0,  rightFront, rightBack, 0, (int((numberCorners-1)/4))*23,0);
   }
 }
 
@@ -43,13 +43,14 @@ void movementFSM::slowSpin(float moveSpeed){
   handler.moveHandler(0, 0, moveSpeed, 0, 0, 5, 0, 0);
 }
 
-void movementFSM::cornering(float frontReading, float backReading) {
+void movementFSM::cornering(float frontReading, float backReading, float yawReading, int yawInput) {
   switch(cornerState){
     case(0):
-      handler.rotateCCW(200);
+      //handler.rotateCCW(150);
+      handler.rotatePosition(yawReading, yawInput);
       break;
     case(1):
-      handler.rotateCW(200);
+      handler.rotateCW(150);
       break;
     case(2):
       handler.moveForward(200);
@@ -61,6 +62,9 @@ void movementFSM::cornering(float frontReading, float backReading) {
       handler.realignWall(frontReading, backReading);
       break;
     case(5):
+      handler.moveRight(100);
+      break;
+    case(6):
       handler.moveLeft(150);
       break;
 
@@ -71,11 +75,11 @@ void movementFSM::dodge(float frontRight, float frontLeft) {
   switch (mod) {
     case (0):
     //LEft
-      handler.moveLeft(200);//-5
+      handler.moveRight(200);//-5
       break;
     case (1):
     //Forward
-      handler.moveRight(200);//5
+      handler.moveLeft(200);//5
       break;
     case (2):
     //Right

@@ -4,9 +4,9 @@
 
 
 void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
-  this->pidX.setGains(125, 0, 0);
+  this->pidX.setGains(150, 0, 0);
   this->pidY.setGains(1, 0, 0);
-  this->pidZ.setGains(1.2, 0, 0);
+  this->pidZ.setGains(35, 0, 0);
   this->p1 = p1; this->p2 = p2; this->p3 = p3; this->p4 = p4;
   this->topLeft.attach(p1); this->botLeft.attach(p2); this->botRight.attach(p3); this->topRight.attach(p4);
 
@@ -36,9 +36,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
   theta2 =  ((-1/rw)* (vx - vy + ((L+l) * wz))) + 1500;
   theta3 = ((1/rw)* (vx - vy - ((L+l) * wz))) + 1500;
   theta4 = ((1/rw)* (vx + vy - ((L+l) * wz))) + 1500;
-  if(fabs(error) >6){
-    error = 0;
-  }
+
   switch (motion) {
     case(0):
       currentState = Correction;
@@ -47,18 +45,21 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
       currentState = noCorrection;
       break;
   }
-
+  if(fabs(error) > 5
+  ){ //Default 6
+    currentState = noCorrection;
+  }
   switch (currentState) {
     case (Correction):
       switch (currentType) {
         case (minor):
             //Serial1.println("minor");
-            if (frontReading <= (10 + desiredDistance) || backReading <= (10+ desiredDistance) || (frontReading == 999) || (backReading == 999)) {
+            if (frontReading <= (11 + desiredDistance) || backReading <= (11+ desiredDistance) || (frontReading == 999) || (backReading == 999)) {
               currentType = wall;
             }
-
             else if(fabs(error) >= 3 && desiredDistance<15){
               //currentType = rotate;
+              //error = 0;
             }
             else {
               modifier = pidX.applyController(error);
@@ -69,10 +70,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
             }
           break;
         case (rotate):
-          //Serial1.println("rotate");
-          /*Serial1.print(frontReading);
-          Serial1.print(", ");
-          Serial1.println(backReading);*/
+
           if (error > 1) {
               topLeftWrite = 1600;
               botLeftWrite = 1600;
@@ -89,10 +87,10 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
           break;
         case(wall):
           //Serial1.println("wall");
-          if((frontReading == 999 || backReading == 999) || (frontReading <= 10.5+ desiredDistance && backReading <= 10.5+ desiredDistance)){
-            topLeftWrite = 1350;
+          if((frontReading == 999 || backReading == 999) || (frontReading <= 11.5+ desiredDistance && backReading <= 11.5+ desiredDistance)){
+            topLeftWrite = 1300;
             botLeftWrite = 1700;
-            topRightWrite = 1350;
+            topRightWrite = 1300;
             botRightWrite = 1700;
 
           }
@@ -141,19 +139,21 @@ void motionHandler::moveForward(int speed_val){
   this->botRight.writeMicroseconds(1500 - speed_val);
   this->botLeft.writeMicroseconds(1500 +speed_val);
 }
-void motionHandler::moveLeft(int speed_val){
+void motionHandler::moveRight(int speed_val){
   this->topLeft.writeMicroseconds(1500+speed_val);
   this->topRight.writeMicroseconds(1500+speed_val);
   this->botRight.writeMicroseconds(1500-speed_val);
   this->botLeft.writeMicroseconds(1500-speed_val);
 }
-void motionHandler::moveRight(int speed_val){
+void motionHandler::moveLeft(int speed_val){
   this->topLeft.writeMicroseconds(1500-speed_val);
   this->topRight.writeMicroseconds(1500-speed_val);
   this->botRight.writeMicroseconds(1500+speed_val);
   this->botLeft.writeMicroseconds(1500+speed_val);
 }
 void motionHandler::rotateCW(int speed_val){
+
+  
   this->topLeft.writeMicroseconds(1500+speed_val);
   this->topRight.writeMicroseconds(1500+speed_val);
   this->botRight.writeMicroseconds(1500+speed_val);
@@ -165,6 +165,22 @@ void motionHandler::rotateCCW(int speed_val){
   this->botRight.writeMicroseconds(1500-speed_val);
   this->botLeft.writeMicroseconds(1500-speed_val);
 }
+
+void motionHandler::rotatePosition(float yawReading, int input){
+  float controllerInput = input - yawReading;
+  float wz=-1*pidZ.applyController(controllerInput);
+  if(wz<0){
+   wz = constrain(wz,-500,0);
+  }
+  else{
+    wz = constrain(wz,0,500);
+  }
+  this->topLeft.writeMicroseconds(1500+wz);
+  this->topRight.writeMicroseconds(1500+wz);
+  this->botRight.writeMicroseconds(1500+wz);
+  this->botLeft.writeMicroseconds(1500+wz);
+}
+
 
 void motionHandler::realignWall(float frontReading, float backReading){
   float error =frontReading-backReading;

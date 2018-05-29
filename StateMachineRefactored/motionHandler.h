@@ -18,6 +18,7 @@ class motionHandler {
     void rotateCW(int speed_val);
     void rotateCCW(int speed_val);
     void realignWall(float frontReading, float backReading);
+    void rotatePosition(float yawReading, int input);
   private:
     PID pidX, pidY, pidZ;
     unsigned int theta1, theta2, theta3, theta4;
