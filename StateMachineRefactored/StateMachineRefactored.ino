@@ -100,6 +100,7 @@ void startUp() {
     
       startRoamCheck();
       safetySwitchCheck();
+      
 
       /*Serial1.print(sensors.getRightBack());
       Serial1.print(",");
@@ -279,7 +280,7 @@ void systemTiming() {
       unsigned long dt = millis() - mpuTimer;
       mpuTimer = currentTime;
       sensors.readYaw(dt);
-      //SerialCom->println(sensors.getYaw());
+      SerialCom->println(sensors.getYaw());
     }
 }
 
@@ -309,7 +310,7 @@ void decisionMaking() {
               if (wallCheck() == false) {
                 movement.changeState((int)Firefight);
                } else {
-                movement.stopMovement();
+                movement.motorBreak();
                 numberCorners++;
                 sensors.recalibrateYaw();
                 delay(20);
@@ -400,6 +401,8 @@ void decisionMaking() {
               if(((sensors.getFrontLeft() <= 9 ) || (sensors.getFrontRight() <= 9) || (sensors.getUltra() <=18))){
                 movement.changeCornerMode(0);
                 movement.changeState((int)NormalMove);
+                delay(20);
+                sensors.recalibrateYaw();
                 dodgeBuffer=0;
                 corneringState = 0;
                 cornerSpace = 0;
@@ -436,11 +439,14 @@ void decisionMaking() {
           case(4):
             //Back to normal move
             Serial1.println("Back to NORMAL");
-            if(sensors.getRightBack()>23*(int((numberCorners-1)/4)) && sensors.getRightBack()>23*(int((numberCorners-1)/4))){
+            if(sensors.getRightBack()>15*(int((numberCorners-1)/4)) && sensors.getRightBack()>15*(int((numberCorners-1)/4))){
               dodgeBuffer++;
               movement.changeCornerMode(3);
                 movement.changeCornerMode(0);
+               delay(20);
+                  sensors.recalibrateYaw();
                 movement.changeState((int)NormalMove);
+                
                 dodgeBuffer=0;
                 corneringState = 0;
                 cornerSpace = 0;
@@ -479,8 +485,10 @@ void decisionMaking() {
              }
             break;
            case(2):
-            if(sensors.getRightBack()<=13 &&sensors.getRightFront()<=13){
+            if(sensors.getRightBack()<=15 &&sensors.getRightFront()<=15){
               movement.changeCornerMode(0);
+              delay(20);
+              sensors.recalibrateYaw();
               movement.changeState((int)NormalMove);
               dodgeBuffer=0;
               corneringState = 0;
@@ -512,7 +520,7 @@ void decisionMaking() {
 
          case (SIDEWAYS):
            //SerialCom->println("Sideways");
-            if (sensors.getFrontRight() - prevR > 10 || sidePass ==1 || dumbTimeout(150)) {
+            if (sensors.getFrontRight() - prevR > 4 || sidePass ==1 || dumbTimeout(140)) {
               sidePass = 1;
               dodgeBuffer++;
               movement.changeDodgeMode(3);
@@ -534,7 +542,7 @@ void decisionMaking() {
             break;
          case (FORWARD):
          //SerialCom->println("Forward");
-         if((millis() - dodgeTime>=  1700 ))
+         if((millis() - dodgeTime>=  1500 ))
          {
           //Serial1.print("END TIME: ");
           //Serial1.println(millis());
@@ -549,7 +557,7 @@ void decisionMaking() {
               sidePass=0;
            }
           }else if (obCheck()) {
-                movement.stopMovement();
+                movement.motorBreak();
                 forceKill = true;
                 numberCorners++;
                 sensors.recalibrateYaw();
@@ -593,7 +601,7 @@ void decisionMaking() {
     case(Stop):
       break;
   }
-    movement.runCurrentState(sensors.getFrontRight(), sensors.getFrontLeft(), sensors.getRightFront(), sensors.getRightBack(), sensors.getYaw(),numberCorners*cornerStrafe,yawInput); //(numberCorners% 2 ==0) ? numberCorners : 0);
+    movement.runCurrentState(sensors.getFrontRight(), sensors.getFrontLeft(), sensors.getRightFront(), sensors.getRightBack(), sensors.getYaw(),numberCorners*cornerStrafe,yawInput, sensors.getGyro()); //(numberCorners% 2 ==0) ? numberCorners : 0);
 }
 
 

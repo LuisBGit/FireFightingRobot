@@ -4,7 +4,7 @@
 class movementFSM {
   public:
     void setupMovement();
-    void runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yaw, int numberCorners, int);
+    void runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yaw, int numberCorners, int yawInput, float gyro );
     void changeState(int movement);
     void disableMovement();
     void stopMovement();
@@ -16,6 +16,8 @@ class movementFSM {
     void startupStraight(float moveSpeed);
     void slowSpin(float moveSpeed);
     void strafeStart(float moveSpeed);
+    void motorBreak();
+
   private:
 
     enum state{
@@ -37,7 +39,7 @@ class movementFSM {
 
     int mod = 3;
     int cornerState = 0;
-    void normalMove(float rightFront, float rightBack, int numberCorners);
+    void normalMove(float rightFront, float rightBack, int numberCorners, float yawReading);
     void dodge(float frontRight, float frontLeft);
     void firefight();
 
