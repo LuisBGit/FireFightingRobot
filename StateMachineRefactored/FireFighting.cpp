@@ -26,7 +26,7 @@ bool FireFighting::fireScan(){
   delay(200); //wait before taking readings
   
   //Sweep Through from 35 to 145 degrees
-  for (int i=20; i<160; i++) {
+  for (int i=10; i<170; i++) {
     servo.write(i); //move the servo to that particular position
         
     for(int j = 0; j < 10; j++){
@@ -95,14 +95,14 @@ void FireFighting::activateFan()
   }  
  // Serial1.println("Fan Off");
   digitalWrite(fanPin,LOW);
-  //Slowly return back to 35 degrees origin point
-  if(firePos > 25){
-    for(int i = firePos; i > 19; i--){
+  //Slowly return back to 10 degrees origin point
+  if(firePos > 10){
+    for(int i = firePos; i > 9; i--){
       servo.write(i);
       delay(40);
     }
-  } else if(firePos < 35){
-    for(int i = firePos; i < 21; i++){
+  } else if(firePos < 10){
+    for(int i = firePos; i < 11; i++){
       servo.write(i);
       delay(40);
   }

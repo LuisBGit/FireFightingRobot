@@ -4,8 +4,8 @@
 
 
 void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
-  this->pidX.setGains(150, 0, 0);
-  this->pidY.setGains(1, 0, 0);
+  this->pidX.setGains(120, 0, 0);
+  this->pidY.setGains(2, 0, 0);
   this->pidZ.setGains(35, 0, 0);
   this->p1 = p1; this->p2 = p2; this->p3 = p3; this->p4 = p4;
   this->topLeft.attach(p1); this->botLeft.attach(p2); this->botRight.attach(p3); this->topRight.attach(p4);
@@ -47,6 +47,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
   }
   if(fabs(error) > 6){ //Default 6
     currentState = noCorrection;
+    //error = 0;
   }
   switch (currentState) {
     case (Correction):
@@ -123,7 +124,33 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
 
 }
 
+void motionHandler::innerControl(float yawReading) {
+  int topLeftWrite;
+  int botLeftWrite;
+  int botRightWrite;
+  int topRightWrite;
+  
 
+  float wz = pidY.applyController(0 - yawReading);
+
+  theta1 = ((-1/rw)* (0 + 5 +((L+l) *0)))  + 1500;
+  theta2 =  ((-1/rw)* (0 - 5 + ((L+l) * 0))) + 1500;
+  theta3 = ((1/rw)* (0 - 5 - ((L+l) * 0))) + 1500;
+  theta4 = ((1/rw)* (0 + 5 - ((L+l) * 0))) + 1500;
+
+
+  
+  topLeftWrite = constrain(this->theta2,  1450, 2100);
+  botLeftWrite = constrain(this->theta4, 1450, 2100);
+  botRightWrite = constrain(this->theta3, 700, 1500);
+ topRightWrite = constrain(this->theta1, 700, 1500);
+  this->topLeft.writeMicroseconds(topLeftWrite);
+  this->topRight.writeMicroseconds(topRightWrite);
+  this->botRight.writeMicroseconds(botRightWrite);
+  this->botLeft.writeMicroseconds(botLeftWrite);
+  
+  
+}
 
 void motionHandler::stopMotor() {
   this->topLeft.writeMicroseconds(1500);
@@ -206,3 +233,5 @@ void motionHandler::disableHandler() {
 void motionHandler::enableHandler() {
   this->topLeft.attach(this->p1); this->botLeft.attach(this->p2); this->botRight.attach(this->p3); this->topRight.attach(this->p4);
 }
+
+

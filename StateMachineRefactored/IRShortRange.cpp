@@ -23,7 +23,7 @@ float IRShort::multiMap(int val, float* _in, float* _out, uint8_t size)
 {
   // take care the value is within range
   // val = constrain(val, _in[0], _in[size-1]);
-  if (val >= _in[0]) return _out[0];// inside dead zone
+  if (val >= _in[0]) return 1;// inside dead zone
   if (val <= _in[size-1]) return 999; //outside range
 
   // search right interval

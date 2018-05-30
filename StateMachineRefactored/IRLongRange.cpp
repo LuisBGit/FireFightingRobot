@@ -36,3 +36,4 @@ float IRLong::multiMap(int val, float* _in, float* _out, uint8_t size)
   // interpolate in the right segment for the rest
   return (val - _in[pos-1]) * (_out[pos] - _out[pos-1]) / (_in[pos] - _in[pos-1]) + _out[pos-1];
 }
+
