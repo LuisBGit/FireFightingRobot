@@ -34,7 +34,7 @@ void movementFSM::normalMove(float rightFront, float rightBack, int numberCorner
   if (numberCorners > 5) {
     handler.innerControl(yawReading);
   } else {
-    handler.moveHandler(0, 8 , 0,  rightFront, rightBack, 0, (int((numberCorners-1)/4))*22.5,0);
+    handler.moveHandler(0, 7 , 0,  rightFront, rightBack, 0, (int((numberCorners-1)/4))*22.5,0);
   }
 }
 
