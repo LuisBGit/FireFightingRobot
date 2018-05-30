@@ -62,7 +62,7 @@ void movementFSM::cornering(float frontReading, float backReading, float yawRead
       handler.realignWall(frontReading, backReading);
       break;
     case(5):
-      handler.moveRight(100);
+      handler.moveRight(90);
       break;
     case(6):
       handler.moveLeft(150);

@@ -4,7 +4,7 @@
 
 
 void motionHandler::setupHandler(byte p1, byte p2, byte p3, byte p4) {
-  this->pidX.setGains(150, 0, 0);
+  this->pidX.setGains(125, 0, 0);
   this->pidY.setGains(1, 0, 0);
   this->pidZ.setGains(35, 0, 0);
   this->p1 = p1; this->p2 = p2; this->p3 = p3; this->p4 = p4;
@@ -46,7 +46,8 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
       break;
   }
   if(fabs(error) > 6){ //Default 6
-    currentState = noCorrection;
+    //currentState = noCorrection;
+    error = 0;
   }
   switch (currentState) {
     case (Correction):

@@ -154,7 +154,7 @@ void startUp() {
         case strafeIn:
         //Serial1.println("STRAFEIN");
           movement.strafeStart(3);
-          if ((sensors.getRightFront() != 999) && (sensors.getRightBack() != 999) &&  within((sensors.getRightBack() + sensors.getRightFront()) /2, 13, 5)) {
+          if (((sensors.getRightFront() != 999) && (sensors.getRightBack() != 999) &&  within((sensors.getRightBack() + sensors.getRightFront()) /2, 13, 5)) || dumbTimeout(1600)) {
             movement.stopMovement();
             dumbBreak = 0;
             startUp = false;
@@ -299,7 +299,7 @@ void decisionMaking() {
   switch(movement.getState()) {
     case(NormalMove):
         //Serial1.println("Normal");
-         if (((sensors.getFrontLeft() <= 10 ) || (sensors.getFrontRight() <= 10) || (sensors.getUltra() <=18)) ){
+         if (((sensors.getFrontLeft() <= 9) || (sensors.getFrontRight() <= 9) || (sensors.getUltra() <=17)) ){
               movement.stopMovement();
 
               forceKill = true;
@@ -378,9 +378,11 @@ void decisionMaking() {
             else{
               cornerCount = 0;
             }
-            if(dumbTimeout(100) | cornerCount > 50) {
+            if(dumbTimeout(120) | cornerCount > 50) {
               //buffer to let it settle
               dodgeBuffer++;
+              movement.stopMovement();
+              movement.changeCornerMode(3);
                 sensors.recalibrateYaw();
                //chnage to realign state
                 movement.changeCornerMode(4);
@@ -450,11 +452,12 @@ void decisionMaking() {
       else{
         switch(corneringState){
           case(0):
+            Serial1.println(sensors.getYaw());
             yawInput = 90;
             if(within(sensors.getYaw(), yawInput,2)){
               cornerCount++;
             }
-            if(cornerCount>30) {
+            if(cornerCount>15) {
                //buffer to give it time to settle
                 movement.changeCornerMode(3);
                   dodgeBuffer = 0;
@@ -509,7 +512,7 @@ void decisionMaking() {
 
          case (SIDEWAYS):
            //SerialCom->println("Sideways");
-            if (sensors.getFrontRight() - prevR > 10 || sidePass ==1 || dumbTimeout(200)) {
+            if (sensors.getFrontRight() - prevR > 10 || sidePass ==1 || dumbTimeout(150)) {
               sidePass = 1;
               dodgeBuffer++;
               movement.changeDodgeMode(3);
@@ -545,7 +548,7 @@ void decisionMaking() {
               dodgeBuffer=0;
               sidePass=0;
            }
-          }/*else if (sensors.getUltra() <= 15) {
+          }else if (obCheck()) {
                 movement.stopMovement();
                 forceKill = true;
                 numberCorners++;
@@ -555,7 +558,7 @@ void decisionMaking() {
                 movement.changeState((int)Cornering);
                 dodgeFSM = START;
 
-         }*/
+         }
           break;
          case (RETURN):
            if(fabs(yDistance.getDistance(sensors.getRightBack()))>dodgeRef-1 || sidePass==1 ){
@@ -620,8 +623,8 @@ boolean finishedLength() {
 
 boolean wallCheck() {
   boolean ultra = sensors.getUltra() <= 20;
-  boolean left = within(sensors.getFrontLeft(), sensors.getUltra(), 53);
-  boolean right = within(sensors.getFrontRight(),sensors.getUltra(), 53);
+  boolean left = within(sensors.getFrontLeft(), sensors.getUltra(), 40);
+  boolean right = within(sensors.getFrontRight(),sensors.getUltra(), 40);
      /*SerialCom->print(left);
      SerialCom->print(", ");
      SerialCom->print(ultra);

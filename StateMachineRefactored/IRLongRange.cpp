@@ -6,18 +6,20 @@ void IRLong::setupIR(int AnalogIn) {
 }
 
 float IRLong::readSensor() {
-  if(arrayPos == 5)
-  {
-    arrayPos = 0;
-  }
    float result = analogRead(this->pin);
-   this->filterStore[this->arrayPos] = result;
-   float mean = ((this->filterStore[0]) + (this->filterStore[1]) + (this->filterStore[2]) + (this->filterStore[3]) + (this->filterStore[4])) /5 ;
-   this->arrayPos++;
+   this->filterStore[0] = result;
+   shiftDown();
+   float mean = (((this->filterStore[0])* 1) + (1*(this->filterStore[1])) + (1*(this->filterStore[2])) + (1*(this->filterStore[3])) + (1*(this->filterStore[4]))) /(5) ;
    return multiMap(mean, this->in, this->out, 31);
    
 }
 
+void IRLong::shiftDown() {
+  for (int i = 0; i < 4; i++) {
+    filterStore[i +1] = filterStore[i];
+    
+  }
+}
 
 float IRLong::multiMap(int val, float* _in, float* _out, uint8_t size)
 {
