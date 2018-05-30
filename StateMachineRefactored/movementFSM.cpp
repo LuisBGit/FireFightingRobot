@@ -10,10 +10,10 @@ void movementFSM::changeState(int movement) {
   currentState = (state)movement;
 }
 
-void movementFSM::runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yawReading, int numberCorners, int yawInput) {
+void movementFSM::runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yawReading, int numberCorners, int yawInput, float gyro) {
   switch (currentState) {
     case(NormalMove):
-      normalMove(rightFront, rightBack, numberCorners);
+      normalMove(rightFront, rightBack, numberCorners, gyro);
       break;
     case (Cornering):
       cornering(rightFront, rightBack, yawReading,yawInput);
@@ -30,11 +30,11 @@ void movementFSM::runCurrentState(float frontRight, float frontLeft, float right
   }
 }
 
-void movementFSM::normalMove(float rightFront, float rightBack, int numberCorners) {
-  if (numberCorners > 10) {
-    handler.moveHandler(0, 5 , 0,  rightFront, rightBack, 3, (int((numberCorners-1)/4))*23,0);
+void movementFSM::normalMove(float rightFront, float rightBack, int numberCorners, float yawReading) {
+  if (numberCorners > 5) {
+    handler.innerControl(yawReading);
   } else {
-    handler.moveHandler(0, 5 , 0,  rightFront, rightBack, 0, (int((numberCorners-1)/4))*23,0);
+    handler.moveHandler(0, 8 , 0,  rightFront, rightBack, 0, (int((numberCorners-1)/4))*22.5,0);
   }
 }
 
@@ -62,7 +62,7 @@ void movementFSM::cornering(float frontReading, float backReading, float yawRead
       handler.realignWall(frontReading, backReading);
       break;
     case(5):
-      handler.moveRight(100);
+      handler.moveRight(90);
       break;
     case(6):
       handler.moveLeft(150);
@@ -92,6 +92,11 @@ void movementFSM::dodge(float frontRight, float frontLeft) {
   }
 
 
+}
+
+void movementFSM::motorBreak(){
+ handler.moveHandler(0, -5, 0, 0 , 0, 3,0,0);
+ handler.stopMotor();
 }
 
 void movementFSM::changeCornerMode(int mode) {
