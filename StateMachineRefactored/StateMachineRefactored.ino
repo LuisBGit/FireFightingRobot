@@ -215,8 +215,13 @@ boolean obCheck() {
 
 STATE runCycle() {
 
+
   currentTime = millis();
 
+  if(numberCorners == 10){
+    movement.stopMovement();
+    return STOPPED;
+  }
 
   systemTiming();
 
@@ -242,10 +247,7 @@ STATE runCycle() {
   if (batterySafetyTrigger == true) {
     return STOPPED;
   }
-  if(numberCorners == 10){
-    movement.stopMovement();
-    return STOPPED;
-  }
+
   return RUNNING;
 
 }
@@ -430,7 +432,7 @@ void decisionMaking() {
           case(3):
             Serial1.println("Move Forward");
             //Move forward a bit
-            if(millis()-cornerTime>850){
+            if(millis()-cornerTime>950){
               dodgeBuffer++;
               movement.changeCornerMode(3);
               if (dodgeBuffer > 6) {
@@ -611,7 +613,7 @@ void decisionMaking() {
     case(Stop):
       break;
   }
-    movement.runCurrentState(sensors.getFrontRight(), sensors.getFrontLeft(), sensors.getRightFront(), sensors.getRightBack(), sensors.getYaw(),numberCorners*cornerStrafe,yawInput, sensors.getGyro()); //(numberCorners% 2 ==0) ? numberCorners : 0);
+    movement.runCurrentState(sensors.getFrontRight(), sensors.getFrontLeft(), sensors.getRightFront(), sensors.getRightBack(), sensors.getYaw(),numberCorners*cornerStrafe,yawInput, sensors.laserYaw()); //(numberCorners% 2 ==0) ? numberCorners : 0);
 }
 
 
@@ -641,8 +643,8 @@ boolean finishedLength() {
 
 boolean wallCheck() {
   boolean ultra = sensors.getUltra() <= 20;
-  boolean left = within(sensors.getFrontLeft(), sensors.getUltra(), 55);
-  boolean right = within(sensors.getFrontRight(),sensors.getUltra(), 55);
+  boolean left = within(sensors.getFrontLeft(), sensors.getUltra(), 58);
+  boolean right = within(sensors.getFrontRight(),sensors.getUltra(), 58);
      /*SerialCom->print(left);
      SerialCom->print(", ");
      SerialCom->print(ultra);

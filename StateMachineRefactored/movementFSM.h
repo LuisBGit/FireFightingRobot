@@ -4,7 +4,7 @@
 class movementFSM {
   public:
     void setupMovement();
-    void runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yaw, int numberCorners, int yawInput, float gyro );
+    void runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yaw, int numberCorners, int yawInput, float laserYaw );
     void changeState(int movement);
     void disableMovement();
     void stopMovement();
@@ -12,7 +12,7 @@ class movementFSM {
     void changeDodgeMode(int mode);
     void changeCornerMode(int mode);
     int getDodgeMode();
-    void cornering(float frontReading, float backReading, float yawReading, int yawInput);
+    void cornering(float frontReading, float backReading, float yawReading, int yawInput, float laserYaw);
     void startupStraight(float moveSpeed);
     void slowSpin(float moveSpeed);
     void strafeStart(float moveSpeed);

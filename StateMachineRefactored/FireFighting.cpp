@@ -11,7 +11,8 @@ void FireFighting::firefightingSetup (int pPin, int fPin, int sPin)
   servoPin = sPin;
   //this->servo = attachedServo;
   
-  //pinMode(pin, INPUT);
+  servo.attach(servoPin);
+  servo.write(90);
 }
 
 bool FireFighting::fireScan(){
@@ -69,12 +70,17 @@ bool FireFighting::fireScan(){
     viableCount = 0;
     return true;
   } else {
-    servo.write(90);
-    //Complete reset
-    fireStarted = false;
-    fireDetected = false;
-    viableCount = 0;
-    return false;
+     //Slowly return back to 10 degrees origin point from 170
+     for(int i = 170; i > 10; i--){
+       servo.write(i);
+       delay(40);
+    }
+  
+  //Complete reset
+  fireStarted = false;
+  fireDetected = false;
+  viableCount = 0;
+  return false;
   }
 }
 
@@ -82,10 +88,10 @@ void FireFighting::activateFan()
 {
   //Serial1.print("Activate Fan");
   servo.write(firePos);
-  delay(200);
+  delay(300);
   int pointRead = analogRead(pin);
   unsigned long timeOut = millis() + 15000;
-  while(pointRead > 650 && millis() <= timeOut)
+  while(pointRead > 550 && millis() <= timeOut)
   {
     
     digitalWrite(fanPin,HIGH); 
@@ -111,7 +117,7 @@ void FireFighting::activateFan()
 
 void FireFighting::fireFight()
 {
-  servo.attach(servoPin);
+  
   bool fireStat = fireScan();
   if(fireStat == true){
     activateFan();
@@ -125,7 +131,7 @@ void FireFighting::fireFight()
     Serial1.println(firePos);
     delay(1000);
     */
-   servo.detach();
+   //servo.detach();
   }
   
 }

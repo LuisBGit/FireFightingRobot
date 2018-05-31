@@ -10,13 +10,13 @@ void movementFSM::changeState(int movement) {
   currentState = (state)movement;
 }
 
-void movementFSM::runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yawReading, int numberCorners, int yawInput, float gyro) {
+void movementFSM::runCurrentState(float frontRight, float frontLeft, float rightFront, float rightBack, float yawReading, int numberCorners, int yawInput, float laserYaw) {
   switch (currentState) {
     case(NormalMove):
-      normalMove(rightFront, rightBack, numberCorners, gyro);
+      normalMove(rightFront, rightBack, numberCorners, laserYaw);
       break;
     case (Cornering):
-      cornering(rightFront, rightBack, yawReading,yawInput);
+      cornering(rightFront, rightBack, yawReading,yawInput, laserYaw);
       break;
     case (Dodge):
       dodge(frontRight, frontLeft);
@@ -31,7 +31,7 @@ void movementFSM::runCurrentState(float frontRight, float frontLeft, float right
 }
 
 void movementFSM::normalMove(float rightFront, float rightBack, int numberCorners, float yawReading) {
-  if (numberCorners > 5) {
+  if (numberCorners > 4) {
     handler.innerControl(yawReading);
   } else {
     handler.moveHandler(0, 5 , 0,  rightFront, rightBack, 0, (int((numberCorners-1)/4))*22.5,0);
@@ -43,7 +43,7 @@ void movementFSM::slowSpin(float moveSpeed){
   handler.moveHandler(0, 0, moveSpeed, 0, 0, 5, 0, 0);
 }
 
-void movementFSM::cornering(float frontReading, float backReading, float yawReading, int yawInput) {
+void movementFSM::cornering(float frontReading, float backReading, float yawReading, int yawInput, float laserYaw) {
   switch(cornerState){
     case(0):
       //handler.rotateCCW(150);
