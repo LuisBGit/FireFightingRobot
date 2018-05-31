@@ -434,19 +434,7 @@ void decisionMaking() {
           case(3):
             Serial1.println("Move Forward");
             //Move forward a bit  
-            if (obCheck()) {
-              movement.stopMovement();
-               movement.changeCornerMode(3);
-                movement.changeCornerMode(0);
-               delay(20);
-                  sensors.recalibrateYaw();
-                movement.changeState((int)Dodge);
-                
-                dodgeBuffer=0;
-                corneringState = 0;
-                cornerSpace = 0;
-              
-            }
+
             if(millis()-cornerTime>950){
               dodgeBuffer++;
               movement.changeCornerMode(3);
