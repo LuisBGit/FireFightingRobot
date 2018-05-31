@@ -433,8 +433,20 @@ void decisionMaking() {
             break;
           case(3):
             Serial1.println("Move Forward");
-            //Move forward a bit
-
+            //Move forward a bit  
+            if (obCheck()) {
+              movement.stopMovement();
+               movement.changeCornerMode(3);
+                movement.changeCornerMode(0);
+               delay(20);
+                  sensors.recalibrateYaw();
+                movement.changeState((int)Dodge);
+                
+                dodgeBuffer=0;
+                corneringState = 0;
+                cornerSpace = 0;
+              
+            }
             if(millis()-cornerTime>950){
               dodgeBuffer++;
               movement.changeCornerMode(3);
@@ -535,7 +547,7 @@ void decisionMaking() {
 
          case (SIDEWAYS):
            //SerialCom->println("Sideways");
-            if (sensors.getFrontRight() - prevR > 5 || sidePass ==1 || dumbTimeout(140)) {
+            if (sensors.getFrontRight() - prevR > 5 || sidePass ==1 || dumbTimeout(120)) {
               sidePass = 1;
               dodgeBuffer++;
               movement.changeDodgeMode(3);
