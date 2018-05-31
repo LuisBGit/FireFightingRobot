@@ -349,7 +349,9 @@ void decisionMaking() {
             if(cornerCount>50) {
                //buffer to give it time to settle
                 dodgeBuffer++;
+                
                 movement.changeCornerMode(3);
+                movement.stopMovement();
                   dodgeBuffer = 0;
                   //move to spin 90 CW state
                   corneringState = 1;
@@ -432,6 +434,7 @@ void decisionMaking() {
           case(3):
             Serial1.println("Move Forward");
             //Move forward a bit
+
             if(millis()-cornerTime>950){
               dodgeBuffer++;
               movement.changeCornerMode(3);
@@ -495,7 +498,7 @@ void decisionMaking() {
             break;
            //move closer to wall and go back to normal move after
            case(2):
-            if(sensors.getRightBack()<=15 && sensors.getRightFront()<=15){
+            if(sensors.getRightBack()<=16.5 && sensors.getRightFront()<=16.5){
               movement.stopMovement();
               movement.changeCornerMode(0);
               delay(20);

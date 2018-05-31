@@ -58,7 +58,7 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
               currentType = wall;
             }
             else if(fabs(error) >= 3 && desiredDistance<15){
-              //currentType = rotate;
+             // currentType = rotate;
               //error = 0;
             }
             else {
@@ -125,29 +125,11 @@ void motionHandler::moveHandler(int vx, int vy, int wz, float frontReading,float
 }
 
 void motionHandler::innerControl(float yawReading) {
-  int topLeftWrite;
-  int botLeftWrite;
-  int botRightWrite;
-  int topRightWrite;
-  
-
-  float wz = pidY.applyController(0 - yawReading);
-
-  theta1 = ((-1/rw)* (0 + 5 +((L+l) *0)))  + 1500;
-  theta2 =  ((-1/rw)* (0 - 5 + ((L+l) * 0))) + 1500;
-  theta3 = ((1/rw)* (0 - 5 - ((L+l) * 0))) + 1500;
-  theta4 = ((1/rw)* (0 + 5 - ((L+l) * 0))) + 1500;
-
-
-  
-  topLeftWrite = constrain(this->theta2,  1450, 2100);
-  botLeftWrite = constrain(this->theta4, 1450, 2100);
-  botRightWrite = constrain(this->theta3, 700, 1500);
- topRightWrite = constrain(this->theta1, 700, 1500);
-  this->topLeft.writeMicroseconds(topLeftWrite);
-  this->topRight.writeMicroseconds(topRightWrite);
-  this->botRight.writeMicroseconds(botRightWrite);
-  this->botLeft.writeMicroseconds(botLeftWrite);
+   float speed_val = 200;
+    this->topLeft.writeMicroseconds(1500 + speed_val);
+  this->topRight.writeMicroseconds(1500 - speed_val);
+  this->botRight.writeMicroseconds(1500 - speed_val);
+  this->botLeft.writeMicroseconds(1500 +speed_val);
   
   
 }
@@ -211,10 +193,10 @@ void motionHandler::rotatePosition(float yawReading, int input){
 void motionHandler::realignWall(float frontReading, float backReading){
   float error =frontReading-backReading;
   if(error>0){
-    rotateCW(100);
+    rotateCW(110);
   }
   else{
-    rotateCCW(100);
+    rotateCCW(110);
   }
 }
 
